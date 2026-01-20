@@ -16,8 +16,8 @@
   --bg2:#0a2233;
 
   /* Superficies */
-  --card: rgba(13, 28, 44, .72);
-  --card2: rgba(15, 34, 52, .64);
+  --card: rgba(255,255,255,.06);
+  --card2:  rgba(255,255,255,.10);
 
   /* Bordes y texto */
   --edge: rgba(255,255,255,.10);
@@ -43,10 +43,9 @@ body{
   font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
   color:var(--txt);
   background:
-    radial-gradient(900px 620px at 18% 10%, rgba(62,115,170,.28), transparent 58%),
-    radial-gradient(760px 560px at 88% 18%, rgba(40,160,155,.16), transparent 60%),
-    radial-gradient(900px 680px at 50% 120%, rgba(10,40,70,.55), transparent 60%),
-    linear-gradient(180deg, var(--bg1), var(--bg0));
+   radial-gradient(1200px 700px at 20% -10%, rgba(10,132,255,.18), transparent 60%),
+      radial-gradient(900px 600px at 90% 10%, rgba(52,199,89,.10), transparent 55%),
+      linear-gradient(180deg, #0b0f14, #0a0d12);
   min-height:100vh;
 }
 
@@ -327,14 +326,8 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
 <div class="wrap">
 
   <div class="topActions">
-        <button class="btn pill gray" id="btnLogout">CERRAR SESIÓN</button>
-  </div>
-
-  <div class="top">
-    <div class="tokenBox">
-      <button class="btn pill blue" id="btnGenToken">GENERADOR TOKEN</button>
-      <input id="crimePicker" class="input isHidden" list="crimeGroups" placeholder="Selecciona grupo delictivo..." />
-    </div>
+    <button class="btn pill gray" id="btnLogout">SALIR</button>
+    <button class="btn pill blue" id="btnGenToken">GENERADOR TOKEN</button>
   </div>
 
   <div class="main">
@@ -391,13 +384,26 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
   </div>
 </div>
 
-<datalist id="crimeGroups">
-  <option value="PATRIMONIO"></option>
-  <option value="LESIONES"></option>
-  <option value="AMENAZAS"></option>
-  <option value="DAÑOS"></option>
-  <option value="ESTAFA"></option>
-</datalist>
+
+<!-- Modal GRUPO DELICTIVO (selector) -->
+<div class="modalBack" id="crimeBack" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modalHead">
+      <div class="modalTitle">Selecciona grupo delictivo</div>
+      <button class="btn pill gray" id="btnCloseCrime" type="button">Cerrar</button>
+    </div>
+
+    <div class="hint" style="margin-top:10px">Elige el tipo para generar el enlace del denunciante.</div>
+
+    <div class="row" style="margin-top:12px">
+      <button class="btn pill gray" data-crime="PATRIMONIO" type="button">PATRIMONIO</button>
+      <button class="btn pill gray" data-crime="LESIONES" type="button">LESIONES</button>
+      <button class="btn pill gray" data-crime="AMENAZAS" type="button">AMENAZAS</button>
+      <button class="btn pill gray" data-crime="DAÑOS" type="button">DAÑOS</button>
+      <button class="btn pill gray" data-crime="ESTAFA" type="button">ESTAFA</button>
+    </div>
+  </div>
+</div>
 
 <!-- Modal QR -->
 <div class="modalBack" id="modalBack" role="dialog" aria-modal="true">
@@ -802,17 +808,17 @@ function renderQR(text){
   qr = new QRCode($("qrBox"), { text, width: 190, height: 190 });
 }
 
-$("btnGenToken").addEventListener("click", ()=>{
-  const inp = $("crimePicker");
-  inp.value = "";
-  inp.classList.remove("isHidden");
-  inp.focus();
-});
 
-$("crimePicker").addEventListener("change", async ()=>{
-  const tipo = ($("crimePicker").value || "").trim().toUpperCase();
-  $("crimePicker").classList.add("isHidden");
-  if (!tipo){ return; }
+function openCrimeModal(){ $("crimeBack").style.display = "flex"; }
+function closeCrimeModal(){ $("crimeBack").style.display = "none"; }
+
+$("btnGenToken").addEventListener("click", openCrimeModal);
+$("btnCloseCrime").addEventListener("click", closeCrimeModal);
+$("crimeBack").addEventListener("click", (e)=>{ if (e.target === $("crimeBack")) closeCrimeModal(); });
+
+async function generateTokenFor(tipo){
+  tipo = (tipo || "").trim().toUpperCase();
+  if (!tipo) return;
 
   const token = randHex(16);
   const id = `P-${Date.now()}-${Math.floor(Math.random()*10000)}`;
@@ -840,6 +846,15 @@ $("crimePicker").addEventListener("change", async ()=>{
 
   renderQR(link);
   openModal();
+}
+
+// Wiring: botones del modal de grupos delictivos
+document.querySelectorAll('#crimeBack [data-crime]').forEach((b)=>{
+  b.addEventListener('click', async ()=>{
+    const tipo = b.getAttribute('data-crime') || '';
+    closeCrimeModal();
+    await generateTokenFor(tipo);
+  });
 });
 
 $("btnCopyLink").addEventListener("click", async ()=>{
