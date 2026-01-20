@@ -32,6 +32,7 @@
 }
 
 *{box-sizing:border-box}
+[hidden]{display:none !important}
 
 body{
   margin:0;
@@ -61,15 +62,15 @@ body{
   border-radius:12px;
   padding:16px 14px;
   background:rgba(59,130,246,.20);
-  color:var(--txt);
+  color:var(--label);
   font-weight:800;
   letter-spacing:.3px;
   cursor:pointer;
 }
 .btn:active{transform:translateY(1px)}
 
-.btn.secondary{background:rgba(255,255,255,.06)}
-.btn.small{padding:10px 12px;border-radius:10px;font-weight:800}
+.btn.secondary{background:rgba(255,255,255,.06);color:var(--label)}
+.btn.small{padding:10px 12px;border-radius:10px;font-weight:800;color:var(--label)}
 
 /* ===== BOTONES TIPO PÍLDORA ===== */
 .btn.pill{
@@ -79,10 +80,12 @@ body{
   background:transparent;
 }
 
-.btn.pill.blue{border:2px solid #3b82f6;color:#cfe2ff}
-.btn.pill.green{border:2px solid #22c55e;color:#d1fae5}
-.btn.pill.gray{border:2px solid rgba(255,255,255,.22);color:rgba(255,255,255,.92)}
-.btn.pill.red{border:2px solid rgba(239,68,68,.65);color:#ffe3e3}
+.btn.pill.blue{border:2px solid #3b82f6;color:var(--label)}
+.btn.pill.green{border:2px solid #22c55e;color:var(--label)}
+/* Solo PERSISTIR: borde morado */
+#btnPersist{border-color:#a855f7 !important;}
+.btn.pill.gray{border:2px solid rgba(255,255,255,.22);color:var(--label)}
+.btn.pill.red{border:2px solid rgba(239,68,68,.65);color:var(--label)}
 .btn.pill.soft{background:rgba(255,255,255,.06)}
 
 /* Activo (JSON / DECLARACION) */
@@ -137,10 +140,10 @@ body{
 /* Labels doradas (IGUAL que Fil.html) */
 .label{
   font-size:12px;
-  color:var(--label);
-  letter-spacing:.2px;
+  color: var(--label);
+  letter-spacing:.25px;
   margin:12px 0 8px;
-  font-weight:800;
+  font-weight:900;
 }
 
 .input, textarea{
@@ -220,6 +223,40 @@ textarea{
 .hint{font-size:12px;color:var(--muted);margin-top:8px}
 .status{font-size:12px;color:var(--muted);margin-top:10px}
 
+/* ===== LOGIN GATE (password manager friendly) ===== */
+.gate{
+  position:fixed;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  background:rgba(0,0,0,.55);
+  z-index:10000;
+}
+.gateCard{
+  width:min(520px, 94vw);
+  background:var(--card);
+  border:1px solid var(--edge);
+  border-radius:18px;
+  padding:16px;
+  box-shadow:
+    0 18px 46px rgba(0,0,0,.35),
+    inset 0 1px 0 rgba(255,255,255,.06);
+  backdrop-filter:blur(10px) saturate(130%);
+  -webkit-backdrop-filter:blur(10px) saturate(130%);
+}
+.gateTitle{
+  font-weight:900;
+  letter-spacing:.3px;
+  margin-bottom:10px;
+}
+.gateRow{
+  display:flex;
+  justify-content:flex-end;
+  margin-top:14px;
+}
+
 /* modal */
 .modalBack{
   position:fixed;
@@ -243,10 +280,37 @@ textarea{
 .qrWrap{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:12px}
 #qrBox{background:#fff;border-radius:12px;padding:10px}
 .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:12px;word-break:break-all}
+
+  /* Fuerza texto en dorado para los títulos que pides */
+  #btnLogout,#btnGenToken,#btnViewJson,#btnViewDoc,#btnChatGPT,#btnPersist,#btnDownload{color:var(--label) !important;}
+  .card .row > div:first-child{color:var(--label);}
 a.btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
 </style>
 </head>
 <body>
+<!-- Login overlay (permite al dispositivo guardar credenciales) -->
+<div id="loginGate" class="gate" hidden>
+  <div class="gateCard">
+    <div class="gateTitle">Acceso</div>
+
+    <form id="loginForm" autocomplete="on" method="post" action="#">
+      <label class="label" for="loginEmail">Usuario</label>
+      <input id="loginEmail" class="input" name="email"
+             type="email" inputmode="email"
+             autocomplete="username" required />
+
+      <label class="label" for="loginPass">Contraseña</label>
+      <input id="loginPass" class="input" name="password"
+             type="password"
+             autocomplete="current-password" required />
+
+      <div class="gateRow">
+        <button class="btn pill blue" id="btnLogin" type="submit">ENTRAR</button>
+      </div>
+      <div class="status" id="loginStatus"></div>
+    </form>
+  </div>
+</div>
 <div id="app" hidden>
 <div class="wrap">
 
@@ -264,7 +328,7 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
   <div class="main">
     <div class="card">
       <div class="row" style="justify-content:space-between">
-        <div style="font-weight:900">Denuncias</div>
+        
       </div>
       <div style="height:10px"></div>
       <div id="denList" class="list"></div>
@@ -275,7 +339,7 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
       <div style="height:14px"></div>
 
       <div class="row" style="justify-content:space-between">
-        <div style="font-weight:900">Denuncia</div>
+        
         <div class="mono" id="selectedRef">—</div>
       </div>
 
@@ -302,7 +366,7 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
         </div>
       </div>
 
-      <textarea id="area" placeholder="JSON de hechos / Declaración (según vista)"></textarea>
+      <textarea id="area"></textarea>
 
       <div class="foot">
         <button class="btn pill green" id="btnPersist" type="button" disabled>PERSISTIR</button>
@@ -390,7 +454,9 @@ import {
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
-  signOut
+  signOut,
+  setPersistence,
+  browserLocalPersistence
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
 function randHex(bytes=16){
@@ -778,18 +844,46 @@ $("btnLogout").addEventListener("click", async ()=>{
 /* ========= INIT (AUTH-GATED) ========= */
 const appRoot = document.getElementById("app");
 let __unsubPred = null;
+const gate = document.getElementById("loginGate");
+const loginForm = document.getElementById("loginForm");
+const loginStatus = document.getElementById("loginStatus");
 
-async function promptLogin(){
-  const email = (prompt("Acceso") || "").trim();
-  if (!email) return;
-  const pass = prompt("Contraseña");
-  if (pass == null) return;
-  await signInWithEmailAndPassword(auth, email, pass);
+function showGate(){
+  if (gate) gate.hidden = false;
+  if (loginStatus) loginStatus.textContent = "";
+  try{ document.getElementById("loginEmail")?.focus(); }catch(_){ }
 }
+function hideGate(){
+  if (gate) gate.hidden = true;
+  if (loginStatus) loginStatus.textContent = "";
+}
+
+if (loginForm){
+  loginForm.addEventListener("submit", async (e)=>{
+    e.preventDefault();
+    if (loginStatus) loginStatus.textContent = "";
+
+    const email = (document.getElementById("loginEmail")?.value || "").trim();
+    const pass = (document.getElementById("loginPass")?.value || "");
+    if (!email || !pass) return;
+
+    try{
+      await signInWithEmailAndPassword(auth, email, pass);
+      // No mostramos el email en UI.
+    }catch(err){
+      const m = (err && err.message) ? err.message : String(err);
+      if (loginStatus) loginStatus.textContent = "ERROR: " + m;
+    }
+  });
+}
+// Persistencia de sesión en el dispositivo (recuerda el login)
+try{ await setPersistence(auth, browserLocalPersistence); }catch(_){ }
+
 
 onAuthStateChanged(auth, async (user)=>{
   if (user){
     if (appRoot) appRoot.hidden = false;
+    hideGate();
     renderDenuncias();
     refreshActions();
     setView("json");
@@ -802,7 +896,7 @@ onAuthStateChanged(auth, async (user)=>{
     state.dirtyDoc = false;
     try{ const a = $("area"); if (a) a.value = ""; }catch(_){ }
     if (appRoot) appRoot.hidden = true;
-    try{ await promptLogin(); }catch(_){ }
+    showGate();
   }
 });
 </script>
