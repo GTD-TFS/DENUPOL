@@ -1,16 +1,9 @@
 // firebase.js — inicialización única Firebase (cliente)
-// Uso directo desde HTML con <script type="module">
+// Importar SIEMPRE desde los HTML con: import { db, auth, serverTimestamp } from "./firebase.js";
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-
-import {
-  getFirestore,
-  serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-
-import {
-  getAuth
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { getFirestore, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
 export const firebaseConfig = {
   apiKey: "AIzaSyDUG_T31JEWDK9x_apUZVHwriWnjurNrms",
@@ -21,14 +14,14 @@ export const firebaseConfig = {
   appId: "1:691472437659:web:2cdd59082976841d7d513e"
 };
 
-// App
-export const app = initializeApp(firebaseConfig);
+// App NOMBRADA (evita que se “cuelen” otras apps inicializadas en la misma página)
+const APP_NAME = "denupol";
+export const app = getApps().some(a => a.name === APP_NAME)
+  ? getApp(APP_NAME)
+  : initializeApp(firebaseConfig, APP_NAME);
 
-// Auth
 export const auth = getAuth(app);
-
-// Firestore
 export const db = getFirestore(app);
 
-// Timestamp seguro servidor
+// Re-export directo
 export { serverTimestamp };
