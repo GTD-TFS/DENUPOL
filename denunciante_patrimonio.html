@@ -8,32 +8,147 @@
 <link rel="apple-touch-icon" href="./icon-192.png">
 <title>Predenuncia · Denunciante</title>
 <style>
-  :root{--bg:#0f172a;--card:#111c33;--edge:rgba(255,255,255,.12);--txt:rgba(255,255,255,.92);--muted:rgba(255,255,255,.65);--acc:#3b82f6;--ok:#22c55e;--danger:#ef4444;}
-  *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--txt)}
-  .wrap{max-width:900px;margin:0 auto;padding:18px 14px 40px}
-  .card{background:var(--card);border:1px solid var(--edge);border-radius:16px;padding:14px}
+  :root{
+    /* Fondo tipo “glass” azul petróleo (alineado con Panel Policía) */
+    --bg0:#081423;
+    --bg1:#0b1e2f;
+    --bg2:#0a2233;
+
+    /* Superficies */
+    --card: rgba(255,255,255,.06);
+    --card2: rgba(255,255,255,.10);
+
+    /* Bordes y texto */
+    --edge: rgba(255,255,255,.10);
+    --edge2: rgba(255,255,255,.14);
+    --txt: rgba(255,255,255,.92);
+    --muted: rgba(255,255,255,.62);
+
+    /* Acentos */
+    --acc:#3b82f6;
+    --ok:#22c55e;
+    --warn:#f59e0b;
+    --danger:#ef4444;
+
+    /* Labels (dorado) */
+    --label:#d6b06a;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+    color:var(--txt);
+    background:
+      radial-gradient(1200px 700px at 20% -10%, rgba(10,132,255,.18), transparent 60%),
+      radial-gradient(900px 600px at 90% 10%, rgba(52,199,89,.10), transparent 55%),
+      linear-gradient(180deg, #0b0f14, #0a0d12);
+    min-height:100vh;
+  }
+
+  .wrap{max-width:1050px;margin:0 auto;padding:22px 16px 26px}
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--edge);
+    border-radius:18px;
+    padding:14px;
+    box-shadow:
+      0 18px 46px rgba(0,0,0,.35),
+      inset 0 1px 0 rgba(255,255,255,.06);
+    backdrop-filter:blur(10px) saturate(130%);
+    -webkit-backdrop-filter:blur(10px) saturate(130%);
+  }
+
   .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   @media(max-width:720px){.grid{grid-template-columns:1fr}}
+
   .h1{font-weight:900;font-size:18px;margin:0}
   .muted{color:var(--muted);font-size:12px}
-  label{display:block;font-size:12px;color:var(--muted);margin:10px 0 6px}
-  input,select,textarea{width:100%;border:1px solid var(--edge);border-radius:12px;background:rgba(0,0,0,.18);color:var(--txt);padding:12px;outline:none;font-size:13px}
+
+  label{display:block;font-size:12px;color:var(--label);margin:10px 0 6px;font-weight:900;letter-spacing:.25px}
+
+  input,select,textarea{
+    width:100%;
+    border:1px solid var(--edge2);
+    border-radius:14px;
+    background:rgba(255,255,255,.06);
+    color:var(--txt);
+    padding:12px;
+    outline:none;
+    font-size:13px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+  }
+  input:focus,select:focus,textarea:focus{
+    border-color: rgba(214,176,106,.55);
+    box-shadow:
+      0 0 0 3px rgba(214,176,106,.12),
+      inset 0 1px 0 rgba(255,255,255,.04);
+  }
+
   textarea{min-height:120px;resize:vertical}
-  .btn{border:1px solid var(--edge);border-radius:12px;padding:12px 12px;background:rgba(59,130,246,.20);color:var(--txt);font-weight:800;letter-spacing:.3px;cursor:pointer}
-  .btn.ok{background:rgba(34,197,94,.18)} .btn.danger{background:rgba(239,68,68,.16)} .btn.secondary{background:rgba(255,255,255,.06)}
+
+  .btn{
+    border:1px solid var(--edge);
+    border-radius:12px;
+    padding:12px 12px;
+    background:rgba(59,130,246,.20);
+    color:var(--label);
+    font-weight:800;
+    letter-spacing:.3px;
+    cursor:pointer;
+  }
+  .btn:active{transform:translateY(1px)}
+
+  .btn.ok{background:rgba(34,197,94,.18);color:var(--label)}
+  .btn.danger{background:rgba(239,68,68,.16);color:var(--label)}
+  .btn.secondary{background:rgba(255,255,255,.06);color:var(--label)}
+
   .hr{height:1px;background:var(--edge);margin:14px 0}
+
   .hidden{display:none!important}
   #boxFiliacion.isHidden{display:none!important}
-  pre{white-space:pre-wrap;word-break:break-word;border:1px solid var(--edge);border-radius:12px;padding:12px;background:rgba(0,0,0,.12);font-size:12px}
-  .modalBack{position:fixed;inset:0;background:rgba(0,0,0,.78);display:none;align-items:center;justify-content:center;padding:18px}
-  .modal{width:min(720px,96vw);background:rgba(17,28,51,.96);border:1px solid var(--edge);border-radius:18px;padding:14px}
+
+  pre{
+    white-space:pre-wrap;
+    word-break:break-word;
+    border:1px solid var(--edge);
+    border-radius:12px;
+    padding:12px;
+    background:rgba(0,0,0,.12);
+    font-size:12px;
+  }
+
+  .modalBack{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.78);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:18px;
+    overflow:auto;
+  }
+  .modal{
+    width:min(720px,96vw);
+    max-height:calc(100vh - 36px);
+    overflow:auto;
+    background:rgba(17,28,51,.96);
+    border:1px solid var(--edge);
+    border-radius:18px;
+    padding:14px;
+  }
   .modalHead{display:flex;justify-content:space-between;align-items:center;gap:10px}
   .modalTitle{font-weight:900}
 
   .btn.small{padding:10px 12px;border-radius:10px}
 
-  /* ===== WIZARD (1 pregunta por pantalla) ===== */
+  /* Evita el zoom al pulsar inputs en iPhone */
+  @media(max-width:720px){
+    .wrap{padding:16px 12px 22px}
+    input,select,textarea{font-size:16px}
+  }
   .wizard{display:flex;flex-direction:column;gap:12px}
   .step{display:none}
   /* El paso activo ocupa altura y centra contenido (píldoras) */
