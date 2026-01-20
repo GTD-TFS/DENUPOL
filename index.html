@@ -186,6 +186,11 @@ textarea{
 @media (max-width: 720px){
   .wrap{padding:16px 12px 22px}
   textarea{min-height:260px}
+  input,
+select,
+textarea,
+.input{
+  font-size:16px;}
 }
 
 .list{display:flex;flex-direction:column;gap:8px}
@@ -271,9 +276,12 @@ textarea{
   justify-content:center;
   padding:18px;
   z-index:9999;
+  overflow:auto; /* CLAVE */
 }
 .modal{
   width:min(720px, 96vw);
+  max-height:calc(100vh - 36px);
+  overflow:auto;
   background:rgba(17,28,51,.96);
   border:1px solid var(--edge);
   border-radius:18px;
@@ -414,7 +422,6 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
       </div>
     </div>
 
-    <div class="hint">Ahora está en modo demo local. Más adelante: Firebase + invalidación al exportar + borrado 23:59.</div>
   </div>
 </div>
 
@@ -496,7 +503,7 @@ const base = new URL("./", location.href).href;
 const state = {
   denuncias: [],
   selected: null, // {id, nombre, tipo, filiacion, hechosJson, docText}
-  gptUrl: "https://chatgpt.com/",
+  gptUrl: "https://chatgpt.com/g/g-69014d0cf61881918dd3773943228c6b-gtd",
   view: "json", // "json" | "doc"
   dirtyDoc: false
 };
