@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Predenuncia · Denunciante</title>
+<style>
+  :root{--bg:#0f172a;--card:#111c33;--edge:rgba(255,255,255,.12);--txt:rgba(255,255,255,.92);--muted:rgba(255,255,255,.65);--acc:#3b82f6;--ok:#22c55e;--danger:#ef4444;}
+  *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--txt)}
+  .wrap{max-width:900px;margin:0 auto;padding:18px 14px 40px}
+  .card{background:var(--card);border:1px solid var(--edge);border-radius:16px;padding:14px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(max-width:720px){.grid{grid-template-columns:1fr}}
+  .h1{font-weight:900;font-size:18px;margin:0}
+  .muted{color:var(--muted);font-size:12px}
+  label{display:block;font-size:12px;color:var(--muted);margin:10px 0 6px}
+  input,select,textarea{width:100%;border:1px solid var(--edge);border-radius:12px;background:rgba(0,0,0,.18);color:var(--txt);padding:12px;outline:none;font-size:13px}
+  textarea{min-height:120px;resize:vertical}
+  .btn{border:1px solid var(--edge);border-radius:12px;padding:12px 12px;background:rgba(59,130,246,.20);color:var(--txt);font-weight:800;letter-spacing:.3px;cursor:pointer}
+  .btn.ok{background:rgba(34,197,94,.18)} .btn.danger{background:rgba(239,68,68,.16)} .btn.secondary{background:rgba(255,255,255,.06)}
+  .hr{height:1px;background:var(--edge);margin:14px 0}
+  .hidden{display:none!important}
+  pre{white-space:pre-wrap;word-break:break-word;border:1px solid var(--edge);border-radius:12px;padding:12px;background:rgba(0,0,0,.12);font-size:12px}
+  .modalBack{position:fixed;inset:0;background:rgba(0,0,0,.78);display:none;align-items:center;justify-content:center;padding:18px}
+  .modal{width:min(720px,96vw);background:rgba(17,28,51,.96);border:1px solid var(--edge);border-radius:18px;padding:14px}
+  .modalHead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .modalTitle{font-weight:900}
+  .btn.small{padding:10px 12px;border-radius:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="row" style="justify-content:space-between">
+      <div>
+        <div class="h1">Predenuncia</div>
+        <div class="muted" id="metaLine" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="hr"></div>
+
+    <div class="h1" style="font-size:14px">Datos de filiación</div>
+
+    <div class="grid">
+      <div>
+        <label>Nombre</label>
+        <input id="fNombre" autocomplete="given-name" />
+      </div>
+      <div>
+        <label>Apellidos</label>
+        <input id="fApellidos" autocomplete="family-name" />
+      </div>
+
+      <div>
+        <label>Tipo documento</label>
+        <select id="fTipoDoc">
+          <option>DNI</option><option>NIE</option><option>PASAPORTE</option><option>OTRO</option>
+        </select>
+      </div>
+      <div>
+        <label>Nº documento</label>
+        <input id="fNumDoc" />
+      </div>
+
+      <div>
+        <label>Nacionalidad</label>
+        <input id="fNac" list="dlPaises" placeholder="ESPAÑA" />
+      </div>
+      <div>
+        <label>Fecha nacimiento</label>
+        <input id="fNacFecha" type="date" />
+      </div>
+
+      <div>
+        <label>Lugar nacimiento (texto)</label>
+        <input id="fNacLugar" placeholder="Municipio, Provincia, País" />
+      </div>
+      <div>
+        <label>Teléfono</label>
+        <input id="fTel" inputmode="numeric" />
+      </div>
+
+      <div style="grid-column:1/-1">
+        <label>Domicilio (texto)</label>
+        <input id="fDom" placeholder="Calle, número, municipio, provincia" />
+      </div>
+    </div>
+
+    <div class="hr"></div>
+
+    <div class="h1" style="font-size:14px">Hechos (patrimonio u otros)</div>
+
+    <div class="grid">
+      <div>
+        <label>Calidad del denunciante</label>
+        <select id="hCalidad">
+          <option>PERJUDICADO</option>
+          <option>REPRESENTANTE LEGAL</option>
+          <option>EMPLEADO DE COMERCIO AFECTADO</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Tipo de conocimiento del hecho</label>
+        <select id="hConocimiento">
+          <option>TESTIGO DIRECTO</option>
+          <option>POR TERCERAS PERSONAS</option>
+          <option>CÁMARAS DE SEGURIDAD</option>
+          <option>TRAS COMPROBAR PROPIEDAD FALTANTE</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Fecha</label>
+        <input id="hFecha" type="date" />
+      </div>
+      <div>
+        <label>Hora</label>
+        <input id="hHora" type="time" />
+      </div>
+
+      <div style="grid-column:1/-1">
+        <label>Lugar (texto corto)</label>
+        <input id="hLugar" placeholder="Calle / establecimiento / municipio" />
+      </div>
+
+      <div>
+        <label>Interacción con autor/es</label>
+        <select id="hInteraccion">
+          <option>NO</option>
+          <option>SI, COMUNICACION</option>
+          <option>SI, FORCEJEO/AGRESION</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Autor retenido en el lugar</label>
+        <select id="hRetenido">
+          <option>SI</option>
+          <option>NO</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Presenta lesiones</label>
+        <select id="hLesiones">
+          <option>NO</option>
+          <option>SI</option>
+        </select>
+      </div>
+
+      <div id="boxParteMed" class="hidden">
+        <label>Si lesiones: ¿aporta parte/informe médico?</label>
+        <select id="hParteMed">
+          <option>NO</option>
+          <option>SI</option>
+        </select>
+      </div>
+
+      <div>
+        <label>¿Hay cámaras de seguridad?</label>
+        <select id="hCamaras">
+          <option>NO</option>
+          <option>SI, LAS APORTA CON LA DENUNCIANTE</option>
+          <option>SI, LAS APORTARÁ EN SEDE JUDICIAL</option>
+          <option>SI, FACILITA INFORMACION PARA SU GESTION</option>
+        </select>
+      </div>
+
+      <div id="boxCamDetalle" class="hidden">
+        <label>Detalle cámaras (solo si facilita info)</label>
+        <input id="hCamDetalle" placeholder="Establecimiento, contacto, ubicación, horario..." />
+      </div>
+
+      <div style="grid-column:1/-1">
+        <label>Objetos</label>
+        <div class="row" style="justify-content:space-between">
+          <button class="btn secondary" id="btnObjs" type="button">AÑADIR / EDITAR OBJETOS</button>
+          <div class="muted" id="objsCount">0</div>
+        </div>
+      </div>
+
+      <div style="grid-column:1/-1">
+        <label>Breve resumen de los hechos</label>
+        <textarea id="hResumen" maxlength="900" placeholder="2-6 líneas. Sin detalles del autor (ya está detenido)."></textarea>
+        <div class="muted">Máx 900 caracteres.</div>
+      </div>
+    </div>
+
+    <div class="hr"></div>
+
+    <div class="row" style="justify-content:flex-end">
+      <button class="btn ok" id="btnFinalizar" type="button">FINALIZAR</button>
+    </div>
+
+    <div class="hr"></div>
+    <div class="muted" id="doneMsg" style="display:none">Formulario finalizado y enviado.</div>
+  </div>
+</div>
+
+<div class="modalBack" id="objsBack" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modalHead">
+      <div class="modalTitle">Objetos</div>
+      <button class="btn small secondary" id="btnCloseObjs" type="button">Cerrar</button>
+    </div>
+
+    <div class="muted" style="margin-top:8px">Añade objetos con +. Solo: tipo, cantidad, valor en euros.</div>
+
+    <div id="objsList" style="margin-top:10px;display:flex;flex-direction:column;gap:10px"></div>
+
+    <div class="row" style="justify-content:space-between;margin-top:12px">
+      <button class="btn secondary" id="btnAddObj" type="button">+</button>
+      <button class="btn ok" id="btnSaveObjs" type="button">GUARDAR</button>
+    </div>
+  </div>
+</div>
+
+<datalist id="dlPaises">
+  <option value="ESPAÑA"></option>
+  <option value="FRANCIA"></option>
+  <option value="PORTUGAL"></option>
+  <option value="MARRUECOS"></option>
+  <option value="RUMANÍA"></option>
+</datalist>
+
+<script type="module">
+import { db, serverTimestamp } from "./firebase.js";
+import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+const $ = (id)=>document.getElementById(id);
+const qs = new URLSearchParams(location.search);
+const token = (qs.get("token")||"").trim();
+const tipo = (qs.get("tipo")||"PATRIMONIO").trim().toUpperCase();
+
+let objetosState = [];
+
+function storageKey(){ return "pred_"+tipo+"_"+token; }
+
+function buildPayload(){
+  const objetos = objetosState.slice();
+  const lesiones = ($("hLesiones").value||"NO");
+  const cam = ($("hCamaras").value||"NO");
+  return {
+    meta: { tipo_delictivo: tipo, token, version: 1, createdAt: new Date().toISOString() },
+    filiacion: {
+      "Nombre": ($("fNombre").value||"").trim(),
+      "Apellidos": ($("fApellidos").value||"").trim(),
+      "Tipo de documento": ($("fTipoDoc").value||"").trim(),
+      "Nº Documento": ($("fNumDoc").value||"").trim(),
+      "Nacionalidad": ($("fNac").value||"").trim(),
+      "Fecha de nacimiento": ($("fNacFecha").value||"").trim(),
+      "Lugar de nacimiento": ($("fNacLugar").value||"").trim(),
+      "Domicilio": ($("fDom").value||"").trim(),
+      "Teléfono": ($("fTel").value||"").trim(),
+      "Condición": ($("hCalidad").value||"").trim()
+    },
+    hechos: {
+      calidad_denunciante: ($("hCalidad").value||"").trim(),
+      conocimiento_hecho: ($("hConocimiento").value||"").trim(),
+      fecha: ($("hFecha").value||"").trim(),
+      hora: ($("hHora").value||"").trim(),
+      lugar: ($("hLugar").value||"").trim(),
+      interaccion_autor: ($("hInteraccion").value||"").trim(),
+      autor_retenido: ($("hRetenido").value||"").trim(),
+      lesiones: lesiones,
+      parte_medico: (lesiones==="SI" ? ($("hParteMed").value||"NO") : "NO"),
+      camaras: cam,
+      camaras_detalle: (cam==="SI, FACILITA INFORMACION PARA SU GESTION" ? ($("hCamDetalle").value||"").trim() : ""),
+      objetos,
+      resumen: ($("hResumen").value||"").trim()
+    }
+  };
+}
+
+function applyVisibility(){
+  const les = $("hLesiones").value;
+  $("boxParteMed").classList.toggle("hidden", les!=="SI");
+  const cam = $("hCamaras").value;
+  $("boxCamDetalle").classList.toggle("hidden", cam!=="SI, FACILITA INFORMACION PARA SU GESTION");
+}
+
+async function saveFinal(){
+  try{
+    if (!token){ alert("Falta token en la URL."); return; }
+
+    const p = buildPayload();
+
+    // Guardado local mínimo (por si se cierra el navegador justo al final)
+    try{
+      const outLocal = { estado:"FINALIZADA", ...p };
+      localStorage.setItem(storageKey(), JSON.stringify(outLocal));
+    }catch(_){ }
+
+    // Firestore: docId = token
+    const ref = doc(db, "predenuncias", token);
+
+    await setDoc(ref, {
+      estado: "FINALIZADA",
+      tipo,
+      token,
+      filiacion: p.filiacion,
+      hechos: p.hechos,
+      createdAt: serverTimestamp(),
+      finalizedAt: serverTimestamp()
+    }, { merge: true });
+
+    const msg = $("doneMsg");
+    if (msg) msg.style.display = "block";
+    alert("Formulario finalizado.");
+
+  }catch(err){
+    const m = (err && err.message) ? err.message : String(err);
+    alert("ERROR AL FINALIZAR: " + m);
+  }
+}
+
+function loadIfAny(){
+  const raw = localStorage.getItem(storageKey());
+  if (!raw) return;
+  try{
+    const x = JSON.parse(raw);
+    const f = x.filiacion || {};
+    $("fNombre").value = f["Nombre"]||"";
+    $("fApellidos").value = f["Apellidos"]||"";
+    $("fTipoDoc").value = f["Tipo de documento"]||"DNI";
+    $("fNumDoc").value = f["Nº Documento"]||"";
+    $("fNac").value = f["Nacionalidad"]||"";
+    $("fNacFecha").value = f["Fecha de nacimiento"]||"";
+    $("fNacLugar").value = f["Lugar de nacimiento"]||"";
+    $("fDom").value = f["Domicilio"]||"";
+    $("fTel").value = f["Teléfono"]||"";
+    $("hCalidad").value = f["Condición"]||$("hCalidad").value;
+
+    const h = x.hechos || {};
+    $("hConocimiento").value = h.conocimiento_hecho||$("hConocimiento").value;
+    $("hFecha").value = h.fecha||"";
+    $("hHora").value = h.hora||"";
+    $("hLugar").value = h.lugar||"";
+    $("hInteraccion").value = h.interaccion_autor||$("hInteraccion").value;
+    $("hRetenido").value = h.autor_retenido||$("hRetenido").value;
+    $("hLesiones").value = h.lesiones||"NO";
+    $("hParteMed").value = h.parte_medico||"NO";
+    $("hCamaras").value = h.camaras||"NO";
+    $("hCamDetalle").value = h.camaras_detalle||"";
+    $("hResumen").value = h.resumen||"";
+
+    objetosState = Array.isArray(h.objetos) ? h.objetos.slice() : [];
+    updateObjsCount();
+
+    applyVisibility();
+  }catch(_){ }
+}
+
+function updateObjsCount(){
+  const n = objetosState.length;
+  const el = $("objsCount");
+  if (el) el.textContent = String(n);
+}
+
+function openObjs(){
+  renderObjs();
+  const b = $("objsBack");
+  if (b) b.style.display = "flex";
+}
+function closeObjs(){
+  const b = $("objsBack");
+  if (b) b.style.display = "none";
+}
+
+function renderObjs(){
+  const list = $("objsList");
+  if (!list) return;
+  list.innerHTML = "";
+
+  if (!objetosState.length){
+    const empty = document.createElement("div");
+    empty.className = "muted";
+    empty.textContent = "Sin objetos.";
+    list.appendChild(empty);
+    return;
+  }
+
+  objetosState.forEach((o, idx)=>{
+    const row = document.createElement("div");
+    row.style.display = "grid";
+    row.style.gridTemplateColumns = "1fr 120px 140px 44px";
+    row.style.gap = "8px";
+
+    const tipoI = document.createElement("input");
+    tipoI.placeholder = "Tipo";
+    tipoI.value = o.tipo || "";
+    tipoI.addEventListener("input", ()=>{ o.tipo = tipoI.value; });
+
+    const cantI = document.createElement("input");
+    cantI.placeholder = "Cantidad";
+    cantI.inputMode = "numeric";
+    cantI.value = o.cantidad || "";
+    cantI.addEventListener("input", ()=>{ o.cantidad = cantI.value; });
+
+    const valI = document.createElement("input");
+    valI.placeholder = "Valor (€)";
+    valI.inputMode = "numeric";
+    valI.value = o.valor || "";
+    valI.addEventListener("input", ()=>{ o.valor = valI.value; });
+
+    const del = document.createElement("button");
+    del.className = "btn danger";
+    del.type = "button";
+    del.textContent = "X";
+    del.addEventListener("click", ()=>{
+      objetosState.splice(idx, 1);
+      renderObjs();
+      updateObjsCount();
+    });
+
+    row.appendChild(tipoI);
+    row.appendChild(cantI);
+    row.appendChild(valI);
+    row.appendChild(del);
+    list.appendChild(row);
+  });
+}
+
+$("hLesiones").addEventListener("change", applyVisibility);
+$("hCamaras").addEventListener("change", applyVisibility);
+$("btnFinalizar").addEventListener("click", saveFinal);
+
+$("btnObjs").addEventListener("click", openObjs);
+$("btnCloseObjs").addEventListener("click", closeObjs);
+$("objsBack").addEventListener("click", (e)=>{ if (e.target === $("objsBack")) closeObjs(); });
+
+$("btnAddObj").addEventListener("click", ()=>{
+  objetosState.push({ tipo:"", cantidad:"", valor:"" });
+  renderObjs();
+  updateObjsCount();
+});
+
+$("btnSaveObjs").addEventListener("click", ()=>{
+  // Limpieza mínima: elimina filas totalmente vacías
+  objetosState = objetosState.filter(o => (o.tipo||"").trim() || (o.cantidad||"").trim() || (o.valor||"").trim());
+  updateObjsCount();
+  closeObjs();
+});
+
+applyVisibility();
+loadIfAny();
+</script>
+</body>
+</html>
