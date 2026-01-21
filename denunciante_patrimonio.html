@@ -800,7 +800,7 @@ function storageKey(){ return "pred_"+tipo+"_"+token; }
 function readFiliacion(){
   return {
   "Nombre": ($("fNombre").value||"").trim(),
-  "Apellidos": ($("fApellidos").value||"").trim(),
+"Apellidos": ($("fApellidos").value||"").trim().toUpperCase(),
   "Tipo de documento": ($("fTipoDoc").value||"").trim(),
   "Otro documento": ($("fTipoDoc").value||"").trim() === "Otro documento de Identidad" ? ($("fOtroDoc").value||"").trim() : "",
   "Nº Documento": ($("fNumDoc").value||"").trim(),
