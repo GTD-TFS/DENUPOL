@@ -83,12 +83,15 @@ body{
   background:transparent;
 }
 
-.btn.pill.blue{border:2px solid #3b82f6;color:var(--label)}
-.btn.pill.green{border:2px solid #22c55e;color:var(--label)}
+.btn.pill.blue{border:1px solid #3b82f6;color:var(--label)}
+#btnDownload{
+  border:1px solid #ef4444 !important;
+}
+.btn.pill.green{border:1px solid #22c55e;color:var(--label)}
 /* Solo PERSISTIR: borde morado */
-#btnPersist{border-color:#a855f7 !important;}
-.btn.pill.gray{border:2px solid rgba(255,255,255,.22);color:var(--label)}
-.btn.pill.red{border:2px solid rgba(239,68,68,.65);color:var(--label)}
+#btnPersist{border-color:#55f7f2 !important;}
+.btn.pill.gray{border:1px solid rgba(255,255,255,.22);color:var(--label)}
+.btn.pill.red{border:1px solid rgba(239,68,68,.65);color:var(--label)}
 .btn.pill.soft{background:rgba(255,255,255,.06)}
 
 /* Activo (JSON / DECLARACION) */
@@ -106,7 +109,7 @@ body{
   align-items:center;
   justify-content:center;
   background:transparent;
-  border:2px solid rgba(255,255,255,.16);
+  border:1px solid rgba(255,255,255,.16);
   box-shadow:none;
 }
 .btn.circle:hover{background:rgba(255,255,255,.06)}
@@ -211,7 +214,7 @@ textarea,
 .item .metaLine{font-size:12px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 .iconBtn{
-  border:1px solid var(--edge);
+  border:1px solid rgba(255,255,255,.07);
   background:rgba(239,68,68,.14);
   color:var(--txt);
   border-radius:10px;
@@ -655,7 +658,7 @@ function refreshActions(){
 
   const bjson = $("btnCopyFinalJson");
   if (bjson) bjson.disabled = true; // oculto; no se usa
-  $("btnDownload").disabled = !(hasSel && !!effectiveDoc);
+  $("btnDownload").disabled = !hasSel;
 }
 $("area").addEventListener("input", ()=>{
   if (state.view === "doc") state.dirtyDoc = true;
@@ -730,12 +733,9 @@ $("btnDownload").addEventListener("click", async ()=>{
     const inArea = ($("area").value || "").trim();
     const persistedDoc = (state.selected && state.selected.docText) ? String(state.selected.docText).trim() : "";
     const docText = (state.view === "doc") ? inArea : persistedDoc;
-    if (!docText){
-      alert("No hay DECLARACION para exportar. Cambia a DECLARACION, pega/edita y pulsa PERSISTIR.");
-      return;
-    }
+    // Permitimos exportar aunque esté vacío (doc: "").
 
-    const finalJson = { doc: docText, filiaciones: [ state.selected.filiacion ] };
+    const finalJson = { doc: (docText || ""), filiaciones: [ state.selected.filiacion ] };
     const nombre = sanitizeFileName(`${state.selected.filiacion["Nombre"]||""} ${state.selected.filiacion["Apellidos"]||""}`) + ".json";
     const jsonText = JSON.stringify(finalJson, null, 2);
     const blob = new Blob([jsonText], {type:"application/json;charset=utf-8"});
