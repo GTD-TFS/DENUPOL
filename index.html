@@ -405,6 +405,7 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
     <div class="hint" style="margin-top:10px">Elige el tipo para generar el enlace del denunciante.</div>
 
     <div class="row" style="margin-top:12px">
+      <button class="btn pill gray" data-crime="HURTO_RVI" type="button">HURTO Y RVI</button>
       <button class="btn pill gray" data-crime="PATRIMONIO" type="button">PATRIMONIO</button>
       <button class="btn pill gray" data-crime="LESIONES" type="button">LESIONES</button>
       <button class="btn pill gray" data-crime="AMENAZAS" type="button">AMENAZAS</button>
@@ -504,14 +505,34 @@ function sanitizeFileName(s){
     .trim()
     .replace(/\.+$/,"") || "predenuncia";
 }
-function buildDenuncianteLink(tipo, token){
-  // Mapeo de formularios por tipo. De momento solo existe PATRIMONIO.
-  const pages = {
-  "PATRIMONIO": "denunciante_patrimonio.html",
-  "LESIONES":   "lesiones.html" // o "lesioness.html" si así lo guardaste
-};
-const page = pages[tipo] || "denunciante.html";
-const base = new URL("./", location.href).href;
+async function resolveDenunciantePage(tipo){
+  const C = {
+    "HURTO_RVI":  ["denunciante_hurto_rvi.html","hurto_rvi.html","denunciante.html"],
+    "PATRIMONIO": ["denunciante_patrimonio.html","patrimonio.html","denunciante.html"],
+    "LESIONES":   ["denunciante_lesiones.html","lesiones.html","denunciante.html"],
+    "AMENAZAS":   ["denunciante_amenazas.html","amenazas.html","denunciante.html"],
+    "DAÑOS":      ["denunciante_danos.html","danos.html","denunciante.html"],
+    "ESTAFA":     ["denunciante_estafa.html","estafa.html","denunciante.html"]
+  };
+  const base = new URL("./", location.href).href;
+  const list = C[tipo] || ["denunciante.html"];
+
+  for (const page of list){
+    const url = base + page;
+    try{
+      let r;
+      try{ r = await fetch(url, { method:"HEAD", cache:"no-store" }); }
+      catch(_){ r = await fetch(url, { method:"GET", cache:"no-store" }); }
+      if (r && r.ok) return page;
+    }catch(_){ }
+  }
+  return "denunciante.html";
+}
+
+async function buildDenuncianteLink(tipo, token){
+  tipo = (tipo || "").toString().trim().toUpperCase();
+  const base = new URL("./", location.href).href;
+  const page = await resolveDenunciantePage(tipo);
   return base + page + "?tipo=" + encodeURIComponent(tipo) + "&token=" + encodeURIComponent(token);
 }
 
@@ -835,7 +856,7 @@ async function generateTokenFor(tipo){
   const token = randHex(16);
   const id = `P-${Date.now()}-${Math.floor(Math.random()*10000)}`;
   const purgeAt = purgeAtToday2359();
-  const link = buildDenuncianteLink(tipo, token);
+  const link = await buildDenuncianteLink(tipo, token);
 
   // Crea la sesión del token en Firestore para que el denunciante pueda FINALIZAR
   // expiresAt debe ser Timestamp (no string)
