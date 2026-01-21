@@ -1252,10 +1252,10 @@ function renderObjs(){
 
     const valI = document.createElement("input");
     valI.className = "objVal";
-    valI.placeholder = "Valor (€)";
+    valI.placeholder = "Valor total (€)";
     valI.inputMode = "numeric";
-    valI.value = o.valor || "";
-    valI.addEventListener("input", ()=>{ o.valor = valI.value; });
+    valI.value = o.valor_total_eur || "";
+valI.addEventListener("input", ()=>{ o.valor_total_eur = valI.value; });
 
     const del = document.createElement("button");
     del.className = "btn danger objDel";
@@ -1281,7 +1281,7 @@ $("btnCloseObjs").addEventListener("click", closeObjs);
 $("objsBack").addEventListener("click", (e)=>{ if (e.target === $("objsBack")) closeObjs(); });
 
 $("btnAddObj").addEventListener("click", ()=>{
-  objetosState.push({ tipo:"", cantidad:"", valor:"" });
+  objetosState.push({ tipo:"", cantidad:"", valor_total_eur:"" });
   renderObjs();
   updateObjsCount();
 });
