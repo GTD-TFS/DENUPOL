@@ -104,7 +104,10 @@
     width:100%;
     max-width:100%;
     min-width:0;
+    display:block;
     text-align:center;
+    -webkit-appearance:none;
+    appearance:none;
   }
 
   input,select,textarea{
@@ -259,6 +262,7 @@
 
   /* Panel visible detrás de las opciones (no “flotando” sin contenedor) */
   .stepPanel{
+    width:100%;
     border:1px solid var(--edge);
     background:rgba(0,0,0,.14);
     border-radius:16px;
@@ -271,6 +275,8 @@
     min-height:56vh;
     max-width:100%;
   }
+  /* iOS/Safari: evita overflow horizontal en inputs nativos */
+  input{max-inline-size:100%}
   .stepTitle{display:none}
   .navRow{display:flex;gap:10px;justify-content:space-between;align-items:center;margin-top:12px}
   @media(max-width:720px){
@@ -497,7 +503,17 @@
     </div>
   </div>
 </div>
-
+<script>
+(async ()=>{
+  if (!('serviceWorker' in navigator)) return;
+  const regs = await navigator.serviceWorker.getRegistrations();
+  if (!regs.length) return;
+  await Promise.all(regs.map(r=>r.unregister()));
+  const keys = await caches.keys();
+  await Promise.all(keys.map(k=>caches.delete(k)));
+  location.reload(); // 1 vez, ya limpio
+})();
+</script>
 
 <script type="module">
 import { db, serverTimestamp } from "./firebase.js";
@@ -764,7 +780,7 @@ const wiz = {
   idx: 0,                 // 0 = filiación (pantalla fija)
   steps: [],              // [{q, el, inputEl?}]
   st: {                   // respuestas
-    calidad_denunciante:"Perjudicado",
+    calidad_denunciante:"PERJUDICADO",
     conocimiento_hecho:"",
     fecha:"",
     hora:"",
