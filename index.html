@@ -99,12 +99,12 @@ body{
 
 /* ===== BOTONES CIRCULARES (C/P/X) TRANSPARENTES ===== */
 .btn.circle{
-  width:48px;
-  height:48px;
+  width:36px;
+  height:36px;
   border-radius:50%;
   padding:0;
-  font-size:18px;
-  font-weight:900;
+  font-size:14px;
+  font-weight:700;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -139,6 +139,9 @@ body{
     inset 0 1px 0 rgba(255,255,255,.06);
   backdrop-filter:blur(10px) saturate(130%);
   -webkit-backdrop-filter:blur(10px) saturate(130%);
+    min-height: calc(100dvh - 140px);
+  display: flex;
+  flex-direction: column;
 }
 
 .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
@@ -172,13 +175,14 @@ body{
 }
 
 textarea{
-  min-height:340px;
-  resize:vertical;
+  min-height: 340px;
+  resize: none;
+  flex: 1;
   font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
 }
 
 /* Más aire entre la zona de botones y el área de texto */
-#area{margin-top:26px}
+#area{margin-top:10px;margin-bottom:16px;}
 
 .main{display:block}
 .tokenBox{display:flex;flex-direction:column;gap:10px}
@@ -229,7 +233,7 @@ textarea,
 .iconBtn.secondary:hover{background:rgba(255,255,255,.16)}
 
 .toolbar{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:12px 0 0}
-.foot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:14px}
+.foot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:auto}
 
 .hint{font-size:12px;color:var(--muted);margin-top:8px}
 .status{font-size:12px;color:var(--muted);margin-top:10px}
@@ -352,9 +356,11 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
       </div>
 
       <div class="toolbar">
-        <div style="display:flex;flex-direction:column;gap:26px;width:100%">
+        <div style="display:flex;flex-direction:column;gap:58px;width:100%">
+          
           <!-- Linea 1: centrado JSON ⇄ DECLARACION -->
           <div class="row" style="justify-content:center;width:100%">
+            
             <button class="btn pill gray" id="btnViewJson" type="button">JSON</button>
             <strong class="swapMark">⇄</strong>
             <button class="btn pill gray" id="btnViewDoc" type="button">DECLARACION</button>
@@ -655,13 +661,16 @@ function refreshActions(){
   const effectiveDoc = (state.view === "doc") ? txt : persistedDoc;
 
   const bp = $("btnPersist");
-  if (bp) bp.disabled = !(hasSel && state.view === "doc" && state.dirtyDoc);
+  // PERSISTIR debe estar disponible siempre que haya selección y estemos en vista DECLARACION,
+  // aunque el texto esté vacío o no se haya tocado el área.
+  if (bp) bp.disabled = !(hasSel && state.view === "doc");
 
   const bjson = $("btnCopyFinalJson");
   if (bjson) bjson.disabled = true; // oculto; no se usa
   $("btnDownload").disabled = !hasSel;
 }
 $("area").addEventListener("input", ()=>{
+  // Mantenemos dirtyDoc por si lo quieres usar para UI, pero ya no bloquea PERSISTIR.
   if (state.view === "doc") state.dirtyDoc = true;
   refreshActions();
 });
@@ -671,7 +680,8 @@ $("btnViewDoc").addEventListener("click", ()=> setView("doc"));
 $("btnPersist").addEventListener("click", async ()=>{
   if (!state.selected) return;
   if (state.view !== "doc") return;
-  const docTxt = ($("area").value || "").trim();
+  const docTxt = ("area" in $ ? $("area").value : ($("area").value)) || "";
+  // No hacemos trim(): permitimos persistir incluso vacío y respetamos saltos/espacios.
   try{
     await updateDoc(doc(db, "predenuncias", state.selected.id), {
       docText: docTxt,
