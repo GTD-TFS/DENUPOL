@@ -39,6 +39,7 @@
   }
 
   *{box-sizing:border-box}
+  html,body{max-width:100%;overflow-x:hidden}
   body{
     margin:0;
     font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
@@ -65,7 +66,7 @@
   }
 
   .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
   @media(max-width:720px){.grid{grid-template-columns:1fr}}
 
   .h1{font-weight:900;font-size:18px;margin:0}
@@ -194,6 +195,8 @@
 
   /* Panel visible detrás de las opciones (no “flotando” sin contenedor) */
   .stepPanel{
+  width:100%;
+max-width:100%;
     border:1px solid var(--edge);
     background:rgba(0,0,0,.14);
     border-radius:16px;
@@ -240,6 +243,8 @@
   /* Evita el zoom al pulsar inputs en iPhone */
   @media(max-width:720px){
     input,select,textarea{font-size:16px}
+    .step.isActive{min-height:auto}
+.stepPanel{min-height:auto;padding:12px}
   }
   /* ===== Picker (píldoras) países / nacimiento ===== */
 .picker{border:1px solid var(--edge2);border-radius:14px;background:rgba(255,255,255,.06);padding:10px;box-shadow: inset 0 1px 0 rgba(255,255,255,.04)}
@@ -355,8 +360,29 @@
         </div>
 
         <div style="grid-column:1/-1">
-          <label>Domicilio (texto)</label>
-          <input id="fDom" placeholder="Calle, número, municipio, provincia" />
+          <label>Domicilio</label>
+          <div class="picker">
+            <div class="pickerTop">
+              <input id="fDomPais" placeholder="Buscar país..." />
+            </div>
+            <div class="pillList" id="domPaisPills"></div>
+
+            <div class="subGrid" id="domEsBox" style="margin-top:10px;display:none">
+              <div>
+                <label>Provincia</label>
+                <select id="fDomProv"></select>
+              </div>
+              <div>
+                <label>Municipio</label>
+                <select id="fDomMun"></select>
+              </div>
+            </div>
+
+            <div style="margin-top:10px">
+              <label>Dirección</label>
+              <input id="fDomDir" placeholder="Calle, número, piso..." />
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -457,12 +483,13 @@ function renderPillsFor(inputEl, hostEl, onPick){
   if (!inputEl || !hostEl) return;
   const paint = ()=>{
     const q = normUp(inputEl.value);
-    const base = (window.PAISES?.featured || []).map(normUp).filter(Boolean);
-    const list = q ? __PAISES_ALL.filter(p=>p.includes(q)).slice(0, 18) : base.slice(0, 18);
-
     hostEl.innerHTML = "";
+    if (!q) return; // SIN píldoras rápidas: solo al escribir
+
+    const list = __PAISES_ALL.filter(p=>p.includes(q)).slice(0, 18);
+
     for (const opt of list){
-      if (opt === "DESCONOCIDO") return;
+      if (opt === "DESCONOCIDO") continue;
       const b = document.createElement("button");
       b.type = "button";
       b.className = "choiceBtn";
@@ -485,22 +512,22 @@ function renderPillsFor(inputEl, hostEl, onPick){
   paint();
 }
 
-function fillProvincias(){
-  const sel = $("fNacProv");
-  if (!sel) return;
-  sel.innerHTML = `<option value=""></option>`;
+function fillProvincias(sel){
+  const el = (typeof sel === "string") ? $(sel) : sel;
+  if (!el) return;
+  el.innerHTML = `<option value=""></option>`;
   const arr = Array.isArray(window.PROVINCIAS_ES) ? window.PROVINCIAS_ES : [];
   for (const p of arr){
     const o = document.createElement("option");
     o.value = p; o.textContent = p;
-    sel.appendChild(o);
+    el.appendChild(o);
   }
 }
 
-function fillMunicipios(prov){
-  const sel = $("fNacMun");
-  if (!sel) return;
-  sel.innerHTML = `<option value=""></option>`;
+function fillMunicipios(prov, sel){
+  const el = (typeof sel === "string") ? $(sel) : sel;
+  if (!el) return;
+  el.innerHTML = `<option value=""></option>`;
   const M0 = (window.MUNICIPIOS_ES && typeof window.MUNICIPIOS_ES === "object") ? window.MUNICIPIOS_ES
            : (window.MUNICIPIOS && typeof window.MUNICIPIOS === "object") ? window.MUNICIPIOS
            : {};
@@ -508,7 +535,7 @@ function fillMunicipios(prov){
   for (const m of arr){
     const o = document.createElement("option");
     o.value = m; o.textContent = m;
-    sel.appendChild(o);
+    el.appendChild(o);
   }
 }
 
@@ -550,9 +577,9 @@ function toggleNacEsUI(){
   const isEs = (pais === "ESPAÑA");
   box.style.display = isEs ? "grid" : "none";
   if (isEs){
-    fillProvincias();
+    fillProvincias("fNacProv");
     const prov = ($("fNacProv")?.value||"").trim();
-    if (prov) fillMunicipios(prov);
+    if (prov) fillMunicipios(prov, "fNacMun");
   }
   computeLugarNacimiento();
 }
@@ -568,10 +595,55 @@ function renderNacPills(){
 
   $("fNacProv")?.addEventListener("change", ()=>{
     const prov = ($("fNacProv")?.value||"").trim();
-    fillMunicipios(prov);
+    fillMunicipios(prov, "fNacMun");
     computeLugarNacimiento();
   });
   $("fNacMun")?.addEventListener("change", computeLugarNacimiento);
+
+  // Domicilio: país + prov/mun si ES + dirección libre
+  renderPillsFor($("fDomPais"), $("domPaisPills"), ()=>{ toggleDomEsUI(); });
+  $("fDomPais")?.addEventListener("input", toggleDomEsUI);
+  $("fDomPais")?.addEventListener("blur", toggleDomEsUI);
+  $("fDomProv")?.addEventListener("change", ()=>{
+    const prov = ($("fDomProv")?.value||"").trim();
+    fillMunicipios(prov, "fDomMun");
+  });
+}
+function computeDomicilio(){
+  const pais = normUp($("fDomPais")?.value);
+  const dir  = ($("fDomDir")?.value||"").trim();
+
+  if (!pais){
+    return dir; // si no hay país, al menos deja la dirección
+  }
+
+  if (pais !== "ESPAÑA"){
+    // "Direccion, Pais"
+    return [dir, pais].filter(Boolean).join(", ");
+  }
+
+  const prov = ($("fDomProv")?.value||"").trim();
+  const mun  = ($("fDomMun")?.value||"").trim();
+
+  // "Direccion, Municipio, Provincia"
+  const parts = [];
+  if (dir) parts.push(dir);
+  if (mun) parts.push(mun);
+  if (prov) parts.push(prov);
+  return parts.join(", ");
+}
+
+function toggleDomEsUI(){
+  const pais = normUp($("fDomPais")?.value);
+  const box = $("domEsBox");
+  if (!box) return;
+  const isEs = (pais === "ESPAÑA");
+  box.style.display = isEs ? "grid" : "none";
+  if (isEs){
+    fillProvincias("fDomProv");
+    const prov = ($("fDomProv")?.value||"").trim();
+    if (prov) fillMunicipios(prov, "fDomMun");
+  }
 }
 // =============================
 // CONFIG: Preguntas por tipo
@@ -660,7 +732,7 @@ function readFiliacion(){
   "Lugar de nacimiento": ($("fNacLugar").value||"").trim(),
   "Provincia nacimiento": ($("fNacProvOut").value||"").trim(),
   "Municipio nacimiento": ($("fNacMunOut").value||"").trim(),
-  "Domicilio": ($("fDom").value||"").trim(),
+  "Domicilio": computeDomicilio(),
   "Teléfono": ($("fTel").value||"").trim(),
   "Condición": (wiz.st.calidad_denunciante||"").trim()
 };
@@ -1188,7 +1260,8 @@ function loadIfAny(){
     $("fNac").value = f["Nacionalidad"]||"";
     $("fNacFecha").value = f["Fecha de nacimiento"]||"";
     $("fNacLugar").value = f["Lugar de nacimiento"]||"";
-    $("fDom").value = f["Domicilio"]||"";
+    $("fDomDir").value = f["Domicilio"]||"";
+    $("fDomPais").value = "";
     $("fTel").value = f["Teléfono"]||"";
     $("fSexo").value = f["Sexo"]||"";
     $("fPadres").value = f["Nombre de los Padres"]||"";
@@ -1227,6 +1300,7 @@ applyTipoDocVisibility();
 updateObjsCount();
 renderNacPills();
 try{ toggleNacEsUI(); }catch(_){ }
+try{ toggleDomEsUI(); }catch(_){ }
 // Si hay tipo desconocido, lo dejamos funcionando igualmente.
 </script>
 </body>
