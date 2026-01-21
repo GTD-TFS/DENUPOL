@@ -507,9 +507,10 @@ function sanitizeFileName(s){
 function buildDenuncianteLink(tipo, token){
   // Mapeo de formularios por tipo. De momento solo existe PATRIMONIO.
   const pages = {
-    "PATRIMONIO": "denunciante_patrimonio.html"
-  };
-  const page = pages[tipo] || "denunciante.html";
+  "PATRIMONIO": "denunciante_patrimonio.html",
+  "LESIONES":   "lesiones.html" // o "lesioness.html" si así lo guardaste
+};
+const page = pages[tipo] || "denunciante.html";
 const base = new URL("./", location.href).href;
   return base + page + "?tipo=" + encodeURIComponent(tipo) + "&token=" + encodeURIComponent(token);
 }
