@@ -6,7 +6,11 @@
 <link rel="manifest" href="./manifest.webmanifest">
 <meta name="theme-color" content="#081423">
 <link rel="apple-touch-icon" href="./icon-192.png">
-<title>Predenuncia · Denunciante</title>
+<!-- Diccionarios (misma carpeta) -->
+<script src="./paises.js"></script>
+<script src="./provincias_es.js"></script>
+<script src="./municipios.js"></script>
+<title>Denunciante · Patrimonio</title>
 <style>
   :root{
     /* Fondo tipo “glass” azul petróleo (alineado con Panel Policía) */
@@ -88,6 +92,8 @@
   }
 
   textarea{min-height:120px;resize:vertical}
+  /* Resumen: más alto */
+  .step[data-key="resumen"] textarea{min-height:260px}
 
   .btn{
     border:1px solid var(--edge);
@@ -139,6 +145,27 @@
     border-radius:18px;
     padding:14px;
   }
+
+  /* Modal en móvil: pantalla completa y sin “márgenes” raros */
+  @media(max-width:720px){
+    .modalBack{
+      padding:0;
+      align-items:stretch;
+      justify-content:stretch;
+    }
+    .modal{
+      width:100vw;
+      max-height:100vh;
+      min-height:100vh;
+      border-radius:0;
+    }
+  }
+
+  /* Filas de objetos: columnas más compactas en pantallas pequeñas */
+  .objRow{display:grid;grid-template-columns:1fr 96px 120px 44px;gap:8px;align-items:center}
+  @media(max-width:720px){
+    .objRow{grid-template-columns:1fr 80px 92px 44px}
+  }
   .modalHead{display:flex;justify-content:space-between;align-items:center;gap:10px}
   .modalTitle{font-weight:900}
 
@@ -155,7 +182,7 @@
   .step.isActive{
     display:flex;
     flex-direction:column;
-    justify-content:center;
+    justify-content:flex-start;
     min-height:calc(100vh - 260px);
   }
   /* En el paso 0 solo se ve la filiación (arriba); no mostramos un panel centrado adicional */
@@ -172,8 +199,13 @@
     border-radius:16px;
     padding:14px;
     box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    min-height:56vh;
   }
-  .stepTitle{font-weight:900;font-size:14px;margin:0 0 8px}
+  .stepTitle{display:none}
   .navRow{display:flex;gap:10px;justify-content:space-between;align-items:center;margin-top:12px}
   .navRow .left{display:flex;gap:10px}
   .pill{min-width:110px}
@@ -197,10 +229,11 @@
     background:rgba(59,130,246,.22);
   }
   /* Píldoras: una debajo de otra, centradas */
-  .choices.pills{flex-direction:column;gap:10px;align-items:stretch}
-  .choices.pills .choiceBtn{width:100%;text-align:center}
+  .choices.pills{flex-direction:column;gap:28px;align-items:stretch}
+  .choices.pills .choiceBtn{width:100%;text-align:center;padding:18px 18px}
   .choices.pills{
-    max-width:560px;
+    width:100%;
+    max-width:720px;
     margin:0 auto;
   }
 
@@ -208,6 +241,12 @@
   @media(max-width:720px){
     input,select,textarea{font-size:16px}
   }
+  /* ===== Picker (píldoras) países / nacimiento ===== */
+.picker{border:1px solid var(--edge2);border-radius:14px;background:rgba(255,255,255,.06);padding:10px;box-shadow: inset 0 1px 0 rgba(255,255,255,.04)}
+.pickerTop{display:flex;gap:10px;align-items:center}
+.pillList{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px}
+.subGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:720px){.subGrid{grid-template-columns:1fr}}
 
 </style>
 </head>
@@ -216,7 +255,7 @@
   <div class="card">
     <div class="row" style="justify-content:space-between">
       <div>
-        <div class="h1">Predenuncia</div>
+        <div class="h1" id="pageTitle"></div>
         <div class="muted" id="metaLine" style="display:none"></div>
       </div>
     </div>
@@ -224,7 +263,7 @@
     <div class="hr"></div>
 
     <div id="boxFiliacion">
-      <div class="h1" style="font-size:14px">Datos de filiación</div>
+      
 
       <div class="grid">
         <div>
@@ -239,8 +278,18 @@
         <div>
           <label>Tipo documento</label>
           <select id="fTipoDoc">
-            <option>DNI</option><option>NIE</option><option>PASAPORTE</option><option>OTRO</option>
+            <option value="DNI">DNI</option>
+            <option value="NIE">NIE</option>
+            <option value="Pasaporte">Pasaporte</option>
+            <option value="Carta Nacional de Identidad">Carta Nacional de Identidad</option>
+            <option value="Indocumentado">Indocumentado</option>
+            <option value="Indocumentada">Indocumentada</option>
+            <option value="Otro documento de Identidad">Otro documento de Identidad</option>
           </select>
+        </div>
+        <div id="boxOtroDoc" class="hidden">
+          <label>Otro documento</label>
+          <input id="fOtroDoc" />
         </div>
         <div>
           <label>Nº documento</label>
@@ -248,19 +297,58 @@
         </div>
 
         <div>
-          <label>Nacionalidad</label>
-          <input id="fNac" placeholder="ESPAÑA" />
-          <div class="choices pills" id="nacPills" style="margin-top:8px"></div>
+          <label>Sexo</label>
+          <select id="fSexo">
+            <option value=""></option>
+            <option value="HOMBRE">HOMBRE</option>
+            <option value="MUJER">MUJER</option>
+          </select>
         </div>
+
+        <div style="grid-column:1/-1">
+          <label>Nombre de los Padres</label>
+          <input id="fPadres" />
+        </div>
+
+        <div style="grid-column:1/-1">
+  <label>Nacionalidad</label>
+  <div class="picker">
+    <div class="pickerTop">
+      <input id="fNac" placeholder="Buscar país..." />
+    </div>
+    <div class="pillList" id="nacPills"></div>
+  </div>
+</div>
         <div>
           <label>Fecha nacimiento</label>
           <input id="fNacFecha" type="date" />
         </div>
 
-        <div>
-          <label>Lugar nacimiento (texto)</label>
-          <input id="fNacLugar" placeholder="Municipio, Provincia, País" />
-        </div>
+        
+<div style="grid-column:1/-1">
+  <label>Lugar nacimiento</label>
+  <div class="picker">
+    <div class="pickerTop">
+      <input id="fNacPais" placeholder="Buscar país..." />
+    </div>
+    <div class="pillList" id="nacPaisPills"></div>
+
+    <div class="subGrid" id="nacEsBox" style="margin-top:10px;display:none">
+      <div>
+        <label>Provincia</label>
+        <select id="fNacProv"></select>
+      </div>
+      <div>
+        <label>Municipio</label>
+        <select id="fNacMun"></select>
+      </div>
+    </div>
+
+    <input id="fNacLugar" type="hidden" />
+    <input id="fNacProvOut" type="hidden" />
+    <input id="fNacMunOut" type="hidden" />
+  </div>
+</div>
         <div>
           <label>Teléfono</label>
           <input id="fTel" inputmode="numeric" />
@@ -310,7 +398,6 @@
       <button class="btn small secondary" id="btnCloseObjs" type="button">Cerrar</button>
     </div>
 
-    <div class="muted" style="margin-top:8px">Añade objetos con +. Solo: tipo, cantidad, valor en euros.</div>
 
     <div id="objsList" style="margin-top:10px;display:flex;flex-direction:column;gap:10px"></div>
 
@@ -331,6 +418,161 @@ const qs = new URLSearchParams(location.search);
 const token = (qs.get("token")||"").trim();
 const tipo = (qs.get("tipo")||"PATRIMONIO").trim().toUpperCase();
 
+function applyTipoDocVisibility(){
+  const sel = $("fTipoDoc");
+  const box = document.getElementById("boxOtroDoc");
+  if (!sel || !box) return;
+  const v = (sel.value || "").trim();
+  box.classList.toggle("hidden", v !== "Otro documento de Identidad");
+}
+$("fTipoDoc")?.addEventListener("change", applyTipoDocVisibility);
+function normUp(s){
+  // Quita tildes/diacríticos PERO conserva Ñ.
+  // Truco: protegemos Ñ antes de normalizar y la restauramos al final.
+  const mark = "__ENYE__";
+  return (s||"").toString()
+    .replace(/ñ/gi, mark)
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(new RegExp(mark, "g"), "Ñ")
+    .toUpperCase().replace(/\s+/g," ").trim();
+}
+
+function getAllPaises(){
+  const out = [];
+  const P = (window.PAISES || null);
+  if (!P) return out;
+  if (Array.isArray(P.featured)) out.push(...P.featured);
+  if (Array.isArray(P.groups)){
+    for (const g of P.groups){
+      if (g && Array.isArray(g.items)) out.push(...g.items);
+    }
+  }
+  const seen = new Set();
+  return out.map(normUp).filter(x=>x && !seen.has(x) && (seen.add(x), true));
+}
+const __PAISES_ALL = getAllPaises();
+const __PAISES_SET = new Set(__PAISES_ALL);
+
+function renderPillsFor(inputEl, hostEl, onPick){
+  if (!inputEl || !hostEl) return;
+  const paint = ()=>{
+    const q = normUp(inputEl.value);
+    const base = (window.PAISES?.featured || []).map(normUp).filter(Boolean);
+    const list = q ? __PAISES_ALL.filter(p=>p.includes(q)).slice(0, 18) : base.slice(0, 18);
+
+    hostEl.innerHTML = "";
+    for (const opt of list){
+      if (opt === "DESCONOCIDO") return;
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "choiceBtn";
+      b.textContent = opt;
+      b.dataset.value = opt;
+      b.classList.toggle("isPicked", normUp(inputEl.value) === opt);
+      b.addEventListener("click", ()=>{
+        inputEl.value = opt;
+        if (onPick) onPick(opt);
+        paint();
+      });
+      hostEl.appendChild(b);
+    }
+  };
+  inputEl.addEventListener("input", paint);
+  inputEl.addEventListener("blur", ()=>{
+    const v = normUp(inputEl.value);
+    if (v && __PAISES_SET.has(v)) inputEl.value = v;
+  });
+  paint();
+}
+
+function fillProvincias(){
+  const sel = $("fNacProv");
+  if (!sel) return;
+  sel.innerHTML = `<option value=""></option>`;
+  const arr = Array.isArray(window.PROVINCIAS_ES) ? window.PROVINCIAS_ES : [];
+  for (const p of arr){
+    const o = document.createElement("option");
+    o.value = p; o.textContent = p;
+    sel.appendChild(o);
+  }
+}
+
+function fillMunicipios(prov){
+  const sel = $("fNacMun");
+  if (!sel) return;
+  sel.innerHTML = `<option value=""></option>`;
+  const M0 = (window.MUNICIPIOS_ES && typeof window.MUNICIPIOS_ES === "object") ? window.MUNICIPIOS_ES
+           : (window.MUNICIPIOS && typeof window.MUNICIPIOS === "object") ? window.MUNICIPIOS
+           : {};
+  const arr = Array.isArray(M0[prov]) ? M0[prov] : [];
+  for (const m of arr){
+    const o = document.createElement("option");
+    o.value = m; o.textContent = m;
+    sel.appendChild(o);
+  }
+}
+
+function computeLugarNacimiento(){
+  const pais = normUp($("fNacPais")?.value);
+  const hid = $("fNacLugar");
+  const outProv = $("fNacProvOut");
+  const outMun = $("fNacMunOut");
+  if (!hid || !outProv || !outMun) return;
+
+  outProv.value = "";
+  outMun.value = "";
+
+  if (!pais){ hid.value = ""; return; }
+
+  if (pais !== "ESPAÑA"){
+    hid.value = pais;
+    return;
+  }
+
+  const prov = ($("fNacProv")?.value||"").trim();
+  const mun  = ($("fNacMun")?.value||"").trim();
+
+  if (prov) outProv.value = prov;
+  if (mun) outMun.value = mun;
+
+  if (prov && mun){
+    hid.value = (prov === mun) ? `${mun}` : `${mun}, ${prov}`;
+    if (prov === mun) outProv.value = ""; // “Madrid, Madrid” -> no repitas
+    return;
+  }
+  hid.value = mun || prov || "ESPAÑA";
+}
+
+function toggleNacEsUI(){
+  const pais = normUp($("fNacPais")?.value);
+  const box = $("nacEsBox");
+  if (!box) return;
+  const isEs = (pais === "ESPAÑA");
+  box.style.display = isEs ? "grid" : "none";
+  if (isEs){
+    fillProvincias();
+    const prov = ($("fNacProv")?.value||"").trim();
+    if (prov) fillMunicipios(prov);
+  }
+  computeLugarNacimiento();
+}
+
+function renderNacPills(){
+  renderPillsFor($("fNac"), $("nacPills"));                 // Nacionalidad
+  renderPillsFor($("fNacPais"), $("nacPaisPills"), ()=>{    // País nacimiento
+    toggleNacEsUI();
+  });
+
+  $("fNacPais")?.addEventListener("input", toggleNacEsUI);
+  $("fNacPais")?.addEventListener("blur", toggleNacEsUI);
+
+  $("fNacProv")?.addEventListener("change", ()=>{
+    const prov = ($("fNacProv")?.value||"").trim();
+    fillMunicipios(prov);
+    computeLugarNacimiento();
+  });
+  $("fNacMun")?.addEventListener("change", computeLugarNacimiento);
+}
 // =============================
 // CONFIG: Preguntas por tipo
 // =============================
@@ -349,30 +591,28 @@ const QUESTION_SETS = {
       "CÁMARAS DE SEGURIDAD",
       "TRAS COMPROBAR PROPIEDAD FALTANTE"
     ]},
-    { key:"fecha", title:"Fecha", type:"date" },
-    { key:"hora", title:"Hora", type:"time" },
-    { key:"lugar", title:"Lugar (texto corto)", type:"text", placeholder:"Calle / establecimiento / municipio" },
+    { key:"fhl", title:"Fecha, hora y lugar", type:"fhl", placeholderLugar:"Calle / establecimiento / municipio" },
     { key:"interaccion_autor", title:"Interacción con autor/es", type:"select", options:[
       "NO",
       "SI, COMUNICACION",
       "SI, FORCEJEO/AGRESION"
     ]},
-    { key:"autor_retenido", title:"Autor retenido en el lugar", type:"select", options:["SI","NO"] },
     { key:"lesiones", title:"Presenta lesiones", type:"select", options:["NO","SI"] },
     { key:"parte_medico", title:"Si lesiones: ¿aporta parte/informe médico?", type:"select", options:["NO","SI"],
       when:(st)=> (st.lesiones === "SI")
     },
+    { key:"autor_retenido", title:"Autor retenido en el lugar", type:"select", options:["SI","NO"] },
     { key:"camaras", title:"¿Hay cámaras de seguridad?", type:"select", options:[
       "NO",
-      "SI, LAS APORTA CON LA DENUNCIANTE",
+      "SI, LAS APORTA EN ESTE ACTO",
       "SI, LAS APORTARÁ EN SEDE JUDICIAL",
-      "SI, FACILITA INFORMACION PARA SU GESTION"
+      "SI, FACILITA CONTACTO PARA SU GESTION"
     ]},
     { key:"camaras_detalle", title:"Detalle cámaras (solo si facilita info)", type:"text", placeholder:"Establecimiento, contacto, ubicación, horario...",
-      when:(st)=> (st.camaras === "SI, FACILITA INFORMACION PARA SU GESTION")
+      when:(st)=> (st.camaras === "SI, FACILITA CONTACTO PARA SU GESTION")
     },
     { key:"objetos", title:"Objetos", type:"objects" },
-    { key:"resumen", title:"Breve resumen de los hechos", type:"textarea", placeholder:"2-6 líneas. Sin detalles del autor (ya está detenido).", max:900 }
+    { key:"resumen", title:"Breve resumen de los hechos", type:"textarea", max:900 }
   ]
 };
 
@@ -407,17 +647,23 @@ function storageKey(){ return "pred_"+tipo+"_"+token; }
 
 function readFiliacion(){
   return {
-    "Nombre": ($("fNombre").value||"").trim(),
-    "Apellidos": ($("fApellidos").value||"").trim(),
-    "Tipo de documento": ($("fTipoDoc").value||"").trim(),
-    "Nº Documento": ($("fNumDoc").value||"").trim(),
-    "Nacionalidad": ($("fNac").value||"").trim(),
-    "Fecha de nacimiento": ($("fNacFecha").value||"").trim(),
-    "Lugar de nacimiento": ($("fNacLugar").value||"").trim(),
-    "Domicilio": ($("fDom").value||"").trim(),
-    "Teléfono": ($("fTel").value||"").trim(),
-    "Condición": (wiz.st.calidad_denunciante||"").trim()
-  };
+  "Nombre": ($("fNombre").value||"").trim(),
+  "Apellidos": ($("fApellidos").value||"").trim(),
+  "Tipo de documento": ($("fTipoDoc").value||"").trim(),
+  "Otro documento": ($("fTipoDoc").value||"").trim() === "Otro documento de Identidad" ? ($("fOtroDoc").value||"").trim() : "",
+  "Nº Documento": ($("fNumDoc").value||"").trim(),
+  "Sexo": ($("fSexo").value||"").trim(),
+  "Nacionalidad": ($("fNac").value||"").trim(),
+  "Nombre de los Padres": ($("fPadres").value||"").trim(),
+  "Fecha de nacimiento": ($("fNacFecha").value||"").trim(),
+  "País nacimiento": ($("fNacPais").value||"").trim(),
+  "Lugar de nacimiento": ($("fNacLugar").value||"").trim(),
+  "Provincia nacimiento": ($("fNacProvOut").value||"").trim(),
+  "Municipio nacimiento": ($("fNacMunOut").value||"").trim(),
+  "Domicilio": ($("fDom").value||"").trim(),
+  "Teléfono": ($("fTel").value||"").trim(),
+  "Condición": (wiz.st.calidad_denunciante||"").trim()
+};
 }
 
 function buildPayload(){
@@ -437,7 +683,7 @@ function buildPayload(){
       lesiones: lesiones,
       parte_medico: (lesiones === "SI") ? (wiz.st.parte_medico||"NO") : "NO",
       camaras: cam,
-      camaras_detalle: (cam === "SI, FACILITA INFORMACION PARA SU GESTION") ? (wiz.st.camaras_detalle||"").trim() : "",
+      camaras_detalle: (cam === "SI, FACILITA CONTACTO PARA SU GESTION") ? (wiz.st.camaras_detalle||"").trim() : "",
       objetos: objetosState.slice(),
       resumen: (wiz.st.resumen||"").trim()
     }
@@ -502,33 +748,58 @@ function makeStepEl(q){
     wrap.appendChild(panel);
     inputEl = box.querySelector(".choiceBtn.isPicked") || box.querySelector(".choiceBtn") || null;
   }
-function renderNacPills(){
-  const host = document.getElementById("nacPills");
-  const inp = document.getElementById("fNac");
-  if (!host || !inp) return;
 
-  const opts = ["ESPAÑA","FRANCIA","PORTUGAL","MARRUECOS","RUMANÍA"];
-  host.innerHTML = "";
+  // --- FHL wizard step (Fecha + Hora + Lugar) ---
+  if (q.type === "fhl"){
+    const panel = document.createElement("div");
+    panel.className = "stepPanel";
 
-  const pick = (v)=>{
-    inp.value = v;
-    host.querySelectorAll(".choiceBtn").forEach(x=>x.classList.toggle("isPicked", x.dataset.value === v));
-  };
+    const g = document.createElement("div");
+    g.className = "grid";
 
-  for (const opt of opts){
-    const b = document.createElement("button");
-    b.type = "button";
-    b.className = "choiceBtn";
-    b.textContent = opt;
-    b.dataset.value = opt;
-    b.addEventListener("click", ()=> pick(opt));
-    host.appendChild(b);
+    const w1 = document.createElement("div");
+    const l1 = document.createElement("label");
+    l1.textContent = "Fecha";
+    const i1 = document.createElement("input");
+    i1.type = "date";
+    i1.id = "q_fecha";
+    i1.value = wiz.st.fecha || "";
+    i1.addEventListener("input", ()=>{ wiz.st.fecha = i1.value; });
+    w1.appendChild(l1);
+    w1.appendChild(i1);
+
+    const w2 = document.createElement("div");
+    const l2 = document.createElement("label");
+    l2.textContent = "Hora";
+    const i2 = document.createElement("input");
+    i2.type = "time";
+    i2.id = "q_hora";
+    i2.value = wiz.st.hora || "";
+    i2.addEventListener("input", ()=>{ wiz.st.hora = i2.value; });
+    w2.appendChild(l2);
+    w2.appendChild(i2);
+
+    const w3 = document.createElement("div");
+    w3.style.gridColumn = "1/-1";
+    const l3 = document.createElement("label");
+    l3.textContent = "Lugar";
+    const i3 = document.createElement("input");
+    i3.type = "text";
+    i3.id = "q_lugar";
+    i3.placeholder = q.placeholderLugar || "";
+    i3.value = wiz.st.lugar || "";
+    i3.addEventListener("input", ()=>{ wiz.st.lugar = i3.value; });
+    w3.appendChild(l3);
+    w3.appendChild(i3);
+
+    g.appendChild(w1);
+    g.appendChild(w2);
+    g.appendChild(w3);
+
+    panel.appendChild(g);
+    wrap.appendChild(panel);
+    inputEl = i1;
   }
-
-  // resalta si ya hay valor
-  const cur = (inp.value||"").trim().toUpperCase();
-  if (cur) pick(cur);
-}
 
   if (q.type === "date" || q.type === "time"){
     const inp = document.createElement("input");
@@ -557,16 +828,10 @@ function renderNacPills(){
     ta.placeholder = q.placeholder || "";
     if (q.max) ta.maxLength = q.max;
     ta.value = wiz.st[q.key] || "";
+    if (q.key === "resumen") ta.style.minHeight = "260px";
     ta.addEventListener("input", ()=>{ wiz.st[q.key] = ta.value; });
     wrap.appendChild(ta);
     inputEl = ta;
-
-    if (q.max){
-      const m = document.createElement("div");
-      m.className = "muted";
-      m.textContent = `Máx ${q.max} caracteres.`;
-      wrap.appendChild(m);
-    }
   }
 
   if (q.type === "objects"){
@@ -590,11 +855,6 @@ function renderNacPills(){
     row.appendChild(c);
     wrap.appendChild(row);
 
-    const hint = document.createElement("div");
-    hint.className = "muted";
-    hint.style.marginTop = "8px";
-    hint.textContent = "Añade objetos con +. Solo: tipo, cantidad, valor en euros.";
-    wrap.appendChild(hint);
   }
 
   return { el: wrap, inputEl };
@@ -689,6 +949,17 @@ function updateStepUI(focus){
   const bf = document.getElementById("boxFiliacion");
   if (bf) bf.classList.toggle("isHidden", wiz.idx !== 0);
 
+  // Título superior (donde estaba "Predenuncia")
+  const pt = document.getElementById("pageTitle");
+  if (pt){
+    if (wiz.idx === 0){
+      pt.textContent = "Datos de filiación";
+    } else {
+      const s = wiz.steps[wiz.idx-1];
+      pt.textContent = (s && s.q && s.q.title) ? String(s.q.title) : "";
+    }
+  }
+
   // Pasos dinámicos
   for (let i=0;i<wiz.steps.length;i++){
     const realIdx = i+1;
@@ -723,10 +994,30 @@ function updateStepUI(focus){
 function validateCurrentStep(){
   setStatus("");
 
-  if (wiz.idx === 0){
-    // Validación mínima: nombre y apellidos opcional; solo token obligatorio en final.
-    return true;
+ if (wiz.idx === 0){
+  const nat = normUp($("fNac")?.value);
+  if (!nat || !__PAISES_SET.has(nat)){
+    setStatus("Selecciona una NACIONALIDAD válida (usa las píldoras).");
+    return false;
   }
+
+  const paisNac = normUp($("fNacPais")?.value);
+  if (!paisNac || !__PAISES_SET.has(paisNac)){
+    setStatus("Selecciona un PAÍS de nacimiento válido (usa las píldoras).");
+    return false;
+  }
+
+  if (paisNac === "ESPAÑA"){
+    const prov = ($("fNacProv")?.value||"").trim();
+    const mun  = ($("fNacMun")?.value||"").trim();
+    if (!prov || !mun){
+      setStatus("Si el país de nacimiento es ESPAÑA, selecciona PROVINCIA y MUNICIPIO.");
+      return false;
+    }
+  }
+
+  return true;
+}
 
   const s = wiz.steps[wiz.idx-1];
   if (!s) return true;
@@ -792,9 +1083,7 @@ function renderObjs(){
 
   objetosState.forEach((o, idx)=>{
     const row = document.createElement("div");
-    row.style.display = "grid";
-    row.style.gridTemplateColumns = "1fr 120px 140px 44px";
-    row.style.gap = "8px";
+    row.className = "objRow";
 
     const tipoI = document.createElement("input");
     tipoI.placeholder = "Tipo";
@@ -893,12 +1182,22 @@ function loadIfAny(){
     $("fNombre").value = f["Nombre"]||"";
     $("fApellidos").value = f["Apellidos"]||"";
     $("fTipoDoc").value = f["Tipo de documento"]||"DNI";
+    $("fOtroDoc").value = f["Otro documento"]||"";
+    applyTipoDocVisibility();
     $("fNumDoc").value = f["Nº Documento"]||"";
     $("fNac").value = f["Nacionalidad"]||"";
     $("fNacFecha").value = f["Fecha de nacimiento"]||"";
     $("fNacLugar").value = f["Lugar de nacimiento"]||"";
     $("fDom").value = f["Domicilio"]||"";
     $("fTel").value = f["Teléfono"]||"";
+    $("fSexo").value = f["Sexo"]||"";
+    $("fPadres").value = f["Nombre de los Padres"]||"";
+    $("fNacPais").value = f["País nacimiento"]||"";
+    $("fNacLugar").value = f["Lugar de nacimiento"]||"";
+    $("fNacProvOut").value = f["Provincia nacimiento"]||"";
+    $("fNacMunOut").value = f["Municipio nacimiento"]||"";
+
+    try{ toggleNacEsUI(); }catch(_){ }
 
     // Hechos
     const h = x.hechos || {};
@@ -924,10 +1223,10 @@ function loadIfAny(){
 // INIT
 renderWizard();
 loadIfAny();
-renderWizard();
-renderNacPills();
+applyTipoDocVisibility();
 updateObjsCount();
-
+renderNacPills();
+try{ toggleNacEsUI(); }catch(_){ }
 // Si hay tipo desconocido, lo dejamos funcionando igualmente.
 </script>
 </body>
