@@ -1,4 +1,4 @@
-const CACHE = "predenuncias-v7";
+const CACHE = "predenuncias-v8";
 
 const ASSETS = [
   "./",
