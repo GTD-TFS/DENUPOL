@@ -39,7 +39,6 @@
   }
 
   *{box-sizing:border-box}
-  html,body{max-width:100%;overflow-x:hidden}
   body{
     margin:0;
     font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
@@ -48,7 +47,33 @@
       radial-gradient(1200px 700px at 20% -10%, rgba(10,132,255,.18), transparent 60%),
       radial-gradient(900px 600px at 90% 10%, rgba(52,199,89,.10), transparent 55%),
       linear-gradient(180deg, #0b0f14, #0a0d12);
-    min-height:100vh;
+    min-height:100dvh;
+    overflow-x:hidden;
+  }
+  html, body{max-width:100%; overflow-x:hidden}
+  /* ===== WIZARD: en móvil no debe haber scroll fuera de FILIACIÓN ===== */
+  body.noScroll{overflow:hidden;height:100dvh}
+  body.noScroll .wrap{height:100dvh;overflow:hidden;padding:16px 12px}
+  body.noScroll .card{
+    height:calc(100dvh - 32px);
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    padding-bottom:calc(14px + env(safe-area-inset-bottom));
+  }
+  body.noScroll #boxFiliacion{display:none!important}
+  body.noScroll #wizard{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;position:relative}
+  body.noScroll #dynSteps{flex:1;min-height:0;overflow:hidden}
+  body.noScroll .step.isActive{flex:1;min-height:0}
+  body.noScroll .stepPanel{flex:1;min-height:0;overflow:hidden;overflow-x:hidden}
+  body.noScroll .navRow{
+    margin-top:auto;
+    position:sticky;
+    bottom:0;
+    background:rgba(8,20,35,.55);
+    backdrop-filter:blur(10px) saturate(130%);
+    -webkit-backdrop-filter:blur(10px) saturate(130%);
+    padding:10px 0 calc(10px + env(safe-area-inset-bottom));
   }
 
   .wrap{max-width:1050px;margin:0 auto;padding:22px 16px 26px}
@@ -66,15 +91,25 @@
   }
 
   .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:100%}
+  .grid > *{min-width:0}
   @media(max-width:720px){.grid{grid-template-columns:1fr}}
 
-  .h1{font-weight:900;font-size:18px;margin:0}
+  .h1{font-weight:900;font-size:18px;margin:0;text-align:center;width:100%}
   .muted{color:var(--muted);font-size:12px}
+  .titleWrap{width:100%}
 
   label{display:block;font-size:12px;color:var(--label);margin:10px 0 6px;font-weight:900;letter-spacing:.25px}
+  input[type="date"],input[type="time"]{
+    width:100%;
+    max-width:100%;
+    min-width:0;
+    text-align:center;
+  }
 
   input,select,textarea{
+  min-width:0;
+  max-width:100%;
     width:100%;
     border:1px solid var(--edge2);
     border-radius:14px;
@@ -116,6 +151,7 @@
 
   .hidden{display:none!important}
   #boxFiliacion.isHidden{display:none!important}
+#boxFiliacion.isHidden + .hrAfterFiliacion{display:none!important}
 
   pre{
     white-space:pre-wrap;
@@ -162,10 +198,38 @@
     }
   }
 
-  /* Filas de objetos: columnas más compactas en pantallas pequeñas */
-  .objRow{display:grid;grid-template-columns:1fr 96px 120px 44px;gap:8px;align-items:center}
+  /* Filas de objetos */
+  .objCard{
+    border:1px solid var(--edge);
+    background:rgba(0,0,0,.12);
+    border-radius:16px;
+    padding:12px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+  }
+
+  .objRow{
+    display:grid;
+    grid-template-columns:1fr 96px 120px 44px;
+    gap:8px;
+    align-items:center;
+    width:100%;
+    max-width:100%;
+  }
+  .objRow > *{min-width:0}
+
+  /* Móvil: Tipo arriba (sin X); Cantidad+Valor y X abajo */
   @media(max-width:720px){
-    .objRow{grid-template-columns:1fr 80px 92px 44px}
+    .objRow{
+      grid-template-columns:1fr 1fr 44px;
+      grid-template-areas:
+        "tipo tipo tipo"
+        "cant val del";
+      align-items:stretch;
+    }
+    .objRow .objTipo{grid-area:tipo}
+    .objRow .objCant{grid-area:cant}
+    .objRow .objVal{grid-area:val}
+    .objRow .objDel{grid-area:del}
   }
   .modalHead{display:flex;justify-content:space-between;align-items:center;gap:10px}
   .modalTitle{font-weight:900}
@@ -177,7 +241,7 @@
     .wrap{padding:16px 12px 22px}
     input,select,textarea{font-size:16px}
   }
-  .wizard{display:flex;flex-direction:column;gap:12px}
+  .wizard{display:flex;flex-direction:column;gap:10px}
   .step{display:none}
   /* El paso activo ocupa altura y centra contenido (píldoras) */
   .step.isActive{
@@ -195,8 +259,6 @@
 
   /* Panel visible detrás de las opciones (no “flotando” sin contenedor) */
   .stepPanel{
-  width:100%;
-max-width:100%;
     border:1px solid var(--edge);
     background:rgba(0,0,0,.14);
     border-radius:16px;
@@ -207,9 +269,13 @@ max-width:100%;
     flex-direction:column;
     justify-content:center;
     min-height:56vh;
+    max-width:100%;
   }
   .stepTitle{display:none}
   .navRow{display:flex;gap:10px;justify-content:space-between;align-items:center;margin-top:12px}
+  @media(max-width:720px){
+    .navRow{margin-top:auto;padding-top:10px}
+  }
   .navRow .left{display:flex;gap:10px}
   .pill{min-width:110px}
   .progress{font-size:12px;color:var(--muted)}
@@ -243,8 +309,6 @@ max-width:100%;
   /* Evita el zoom al pulsar inputs en iPhone */
   @media(max-width:720px){
     input,select,textarea{font-size:16px}
-    .step.isActive{min-height:auto}
-.stepPanel{min-height:auto;padding:12px}
   }
   /* ===== Picker (píldoras) países / nacimiento ===== */
 .picker{border:1px solid var(--edge2);border-radius:14px;background:rgba(255,255,255,.06);padding:10px;box-shadow: inset 0 1px 0 rgba(255,255,255,.04)}
@@ -259,11 +323,11 @@ max-width:100%;
 <div class="wrap">
   <div class="card">
     <div class="row" style="justify-content:space-between">
-      <div>
-        <div class="h1" id="pageTitle"></div>
-        <div class="muted" id="metaLine" style="display:none"></div>
-      </div>
-    </div>
+  <div class="titleWrap">
+    <div class="h1" id="pageTitle"></div>
+    <div class="muted" id="metaLine" style="display:none"></div>
+  </div>
+</div>
 
     <div class="hr"></div>
 
@@ -387,7 +451,7 @@ max-width:100%;
       </div>
     </div>
 
-    <div class="hr"></div>
+    <div class="hr hrAfterFiliacion"></div>
 
     <div class="wizard" id="wizard" data-step0="1">
       <div class="progress" id="wizProgress">—</div>
@@ -652,39 +716,39 @@ function toggleDomEsUI(){
 // Cada pregunta es 1 pantalla.
 const QUESTION_SETS = {
   "PATRIMONIO": [
-    { key:"calidad_denunciante", title:"Calidad del denunciante", type:"select", options:[
+    { key:"calidad_denunciante", title:"DENUNCIA EN CALIDAD DE...", type:"select", options:[
       "PERJUDICADO",
       "REPRESENTANTE LEGAL",
       "EMPLEADO DE COMERCIO AFECTADO"
     ]},
-    { key:"conocimiento_hecho", title:"Tipo de conocimiento del hecho", type:"select", options:[
+    { key:"conocimiento_hecho", title:"¿COMO TIENE CONOCIMIENTO DEL HECHO?", type:"select", options:[
       "TESTIGO DIRECTO",
       "POR TERCERAS PERSONAS",
-      "CÁMARAS DE SEGURIDAD",
+      "CAMARAS DE SEGURIDAD",
       "TRAS COMPROBAR PROPIEDAD FALTANTE"
     ]},
-    { key:"fhl", title:"Fecha, hora y lugar", type:"fhl", placeholderLugar:"Calle / establecimiento / municipio" },
-    { key:"interaccion_autor", title:"Interacción con autor/es", type:"select", options:[
+    { key:"fhl", title:"FECHA, HORA Y LUGAR DEL HECHO", type:"fhl", placeholderLugar:"Calle / establecimiento / municipio" },
+    { key:"interaccion_autor", title:"¿INTERACCION CON EL AUTOR?", type:"select", options:[
       "NO",
       "SI, COMUNICACION",
-      "SI, FORCEJEO/AGRESION"
+      "SI, FORCEJEO O AGRESION"
     ]},
-    { key:"lesiones", title:"Presenta lesiones", type:"select", options:["NO","SI"] },
-    { key:"parte_medico", title:"Si lesiones: ¿aporta parte/informe médico?", type:"select", options:["NO","SI"],
+    { key:"lesiones", title:"¿PRESENTA LESIONES?", type:"select", options:["NO","SI"] },
+    { key:"parte_medico", title:"¿APORTA INFORME MEDICO?", type:"select", options:["NO","SI"],
       when:(st)=> (st.lesiones === "SI")
     },
-    { key:"autor_retenido", title:"Autor retenido en el lugar", type:"select", options:["SI","NO"] },
-    { key:"camaras", title:"¿Hay cámaras de seguridad?", type:"select", options:[
+    { key:"autor_retenido", title:"¿AUTOR RETENIDO EN EL LUGAR?", type:"select", options:["SI","NO"] },
+    { key:"camaras", title:"¿HAY CAMARAS DE SEGURIDAD?", type:"select", options:[
       "NO",
       "SI, LAS APORTA EN ESTE ACTO",
       "SI, LAS APORTARÁ EN SEDE JUDICIAL",
       "SI, FACILITA CONTACTO PARA SU GESTION"
     ]},
-    { key:"camaras_detalle", title:"Detalle cámaras (solo si facilita info)", type:"text", placeholder:"Establecimiento, contacto, ubicación, horario...",
+    { key:"camaras_detalle", title:"GESTION DE GRABACIONES", type:"text", placeholder:"Establecimiento, contacto, ubicación, horario...",
       when:(st)=> (st.camaras === "SI, FACILITA CONTACTO PARA SU GESTION")
     },
-    { key:"objetos", title:"Objetos", type:"objects" },
-    { key:"resumen", title:"Breve resumen de los hechos", type:"textarea", max:900 }
+    { key:"objetos", title:"OBJETOS SUSTRAIDOS", type:"objects" },
+    { key:"resumen", title:"BREVE RESUMEN DE LOS HECHOS", type:"textarea", max:900 }
   ]
 };
 
@@ -700,7 +764,7 @@ const wiz = {
   idx: 0,                 // 0 = filiación (pantalla fija)
   steps: [],              // [{q, el, inputEl?}]
   st: {                   // respuestas
-    calidad_denunciante:"",
+    calidad_denunciante:"Perjudicado",
     conocimiento_hecho:"",
     fecha:"",
     hora:"",
@@ -945,7 +1009,7 @@ function renderWizard(){
     wiz.steps.push({ q, el, inputEl });
   }
 
-  updateStepUI(true);
+  updateStepUI(false);
 }
 
 function totalVisibleSteps(){
@@ -1020,6 +1084,9 @@ function updateStepUI(focus){
   // Mostrar/ocultar la sección de filiación fuera del wizard
   const bf = document.getElementById("boxFiliacion");
   if (bf) bf.classList.toggle("isHidden", wiz.idx !== 0);
+  const isMobile = window.matchMedia("(max-width:720px)").matches;
+  const lockScroll = (wiz.idx !== 0) && isMobile;
+  document.body.classList.toggle("noScroll", lockScroll);
 
   // Título superior (donde estaba "Predenuncia")
   const pt = document.getElementById("pageTitle");
@@ -1053,14 +1120,8 @@ function updateStepUI(focus){
 
   updateProgress();
 
-  if (focus){
-    try{
-      if (wiz.idx > 0){
-        const s = wiz.steps[wiz.idx-1];
-        if (s && s.inputEl) s.inputEl.focus();
-      }
-    }catch(_){ }
-  }
+  // SIN AUTOFOCUS
+// El teclado, calendario o reloj solo se abre si el usuario toca el campo
 }
 
 function validateCurrentStep(){
@@ -1101,7 +1162,7 @@ function validateCurrentStep(){
 
 function goTo(realIdx){
   wiz.idx = realIdx;
-  updateStepUI(true);
+  updateStepUI(false);
 }
 
 $("btnPrev").addEventListener("click", ()=>{
@@ -1157,25 +1218,31 @@ function renderObjs(){
     const row = document.createElement("div");
     row.className = "objRow";
 
+    const card = document.createElement("div");
+    card.className = "objCard";
+
     const tipoI = document.createElement("input");
+    tipoI.className = "objTipo";
     tipoI.placeholder = "Tipo";
     tipoI.value = o.tipo || "";
     tipoI.addEventListener("input", ()=>{ o.tipo = tipoI.value; });
 
     const cantI = document.createElement("input");
+    cantI.className = "objCant";
     cantI.placeholder = "Cantidad";
     cantI.inputMode = "numeric";
     cantI.value = o.cantidad || "";
     cantI.addEventListener("input", ()=>{ o.cantidad = cantI.value; });
 
     const valI = document.createElement("input");
+    valI.className = "objVal";
     valI.placeholder = "Valor (€)";
     valI.inputMode = "numeric";
     valI.value = o.valor || "";
     valI.addEventListener("input", ()=>{ o.valor = valI.value; });
 
     const del = document.createElement("button");
-    del.className = "btn danger";
+    del.className = "btn danger objDel";
     del.type = "button";
     del.textContent = "X";
     del.addEventListener("click", ()=>{
@@ -1188,7 +1255,9 @@ function renderObjs(){
     row.appendChild(cantI);
     row.appendChild(valI);
     row.appendChild(del);
-    list.appendChild(row);
+
+    card.appendChild(row);
+    list.appendChild(card);
   });
 }
 
@@ -1301,6 +1370,13 @@ updateObjsCount();
 renderNacPills();
 try{ toggleNacEsUI(); }catch(_){ }
 try{ toggleDomEsUI(); }catch(_){ }
+try{
+  const isMobile = window.matchMedia("(max-width:720px)").matches;
+  document.body.classList.toggle("noScroll", (wiz.idx !== 0) && isMobile);
+}catch(_){ }
+window.addEventListener("resize", ()=>{
+  try{ updateStepUI(false); }catch(_){ }
+});
 // Si hay tipo desconocido, lo dejamos funcionando igualmente.
 </script>
 </body>
