@@ -406,11 +406,11 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
 
     <div class="row" style="margin-top:12px">
       <button class="btn pill gray" data-crime="HURTO_RVI" type="button">HURTO Y RVI</button>
+      <button class="btn pill gray" data-crime="ROBO_FUERZA" type="button">ROBO CON FUERZA</button>
       <button class="btn pill gray" data-crime="PATRIMONIO" type="button">PATRIMONIO</button>
       <button class="btn pill gray" data-crime="LESIONES" type="button">LESIONES</button>
       <button class="btn pill gray" data-crime="AMENAZAS" type="button">AMENAZAS</button>
       <button class="btn pill gray" data-crime="DAÑOS" type="button">DAÑOS</button>
-      <button class="btn pill gray" data-crime="ESTAFA" type="button">ESTAFA</button>
     </div>
   </div>
 </div>
@@ -507,12 +507,12 @@ function sanitizeFileName(s){
 }
 async function resolveDenunciantePage(tipo){
   const C = {
-    "HURTO_RVI":  ["denunciante_hurto_rvi.html","hurto_rvi.html","denunciante.html"],
-    "PATRIMONIO": ["denunciante_patrimonio.html","patrimonio.html","denunciante.html"],
-    "LESIONES":   ["denunciante_lesiones.html","lesiones.html","denunciante.html"],
-    "AMENAZAS":   ["denunciante_amenazas.html","amenazas.html","denunciante.html"],
-    "DAÑOS":      ["denunciante_danos.html","danos.html","denunciante.html"],
-    "ESTAFA":     ["denunciante_estafa.html","estafa.html","denunciante.html"]
+    "HURTO_RVI":   ["denunciante_hurto_rvi.html","hurto_rvi.html","denunciante.html"],
+    "ROBO_FUERZA": ["robo_fuerza.html","denunciante_robo_fuerza.html","denunciante.html"],
+    "PATRIMONIO":  ["denunciante_patrimonio.html","patrimonio.html","denunciante.html"],
+    "LESIONES":    ["denunciante_lesiones.html","lesiones.html","denunciante.html"],
+    "AMENAZAS":    ["denunciante_amenazas.html","amenazas.html","denunciante.html"],
+    "DAÑOS":       ["denunciante_danos.html","danos.html","denunciante.html"]
   };
   const base = new URL("./", location.href).href;
   const list = C[tipo] || ["denunciante.html"];
