@@ -517,12 +517,40 @@
 
 <script type="module">
 import { db, serverTimestamp } from "./firebase.js";
-import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const $ = (id)=>document.getElementById(id);
 const qs = new URLSearchParams(location.search);
 const token = (qs.get("token")||"").trim();
 const tipo = (qs.get("tipo")||"ROBO_FUERZA").trim().toUpperCase();
+
+// ===== TOKEN GATE (bloquea enlace caducado o ya usado) =====
+if (!token){
+  document.body.innerHTML = "<h2>Acceso no válido</h2>";
+  throw new Error("Sin token");
+}
+
+const tokenRef = doc(db, "tokenSessions", token);
+const tokenSnap = await getDoc(tokenRef);
+
+if (!tokenSnap.exists()){
+  document.body.innerHTML = "<h2>Este enlace ya no es válido</h2>";
+  throw new Error("Token inexistente");
+}
+
+const tokenData = tokenSnap.data() || {};
+
+if (tokenData.revoked === true){
+  document.body.innerHTML = "<h2>Esta denuncia ya fue enviada</h2>";
+  throw new Error("Token ya usado");
+}
+
+if (tokenData.expiresAt && typeof tokenData.expiresAt.toMillis === "function"){
+  if (tokenData.expiresAt.toMillis() < Date.now()){
+    document.body.innerHTML = "<h2>El enlace ha caducado</h2>";
+    throw new Error("Token caducado");
+  }
+}
 
 // Ajusta el título si esta página se usa para ROBO_FUERZA
 try{
@@ -1373,9 +1401,27 @@ async function saveFinal(){
       finalizedAt: serverTimestamp()
     }, { merge: true });
 
-    const msg = $("doneMsg");
-    if (msg) msg.style.display = "block";
-    alert("Formulario finalizado.");
+    // Marca el token como usado para invalidar el enlace en recargas posteriores
+    try{
+      await updateDoc(tokenRef, {
+        revoked: true,
+        usedAt: serverTimestamp()
+      });
+    }catch(_){ }
+
+    // Bloquea la interfaz inmediatamente (sin esperar a recargar)
+    try{
+      document.body.classList.remove("noScroll");
+    }catch(_){ }
+
+    document.body.innerHTML = `
+      <div style="min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:28px">
+        <div style="max-width:720px;width:100%;text-align:center;border:1px solid rgba(255,255,255,.10);border-radius:18px;padding:18px;background:rgba(255,255,255,.06);backdrop-filter:blur(10px) saturate(130%);-webkit-backdrop-filter:blur(10px) saturate(130%);box-shadow:0 18px 46px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.06)">
+          <h2 style="margin:0 0 10px;font-weight:900;letter-spacing:.2px">Denuncia enviada correctamente</h2>
+          <p style="margin:0;color:rgba(255,255,255,.72)">Este enlace ya no puede volver a utilizarse.</p>
+        </div>
+      </div>
+    `;
 
   }catch(err){
     const m = (err && err.message) ? err.message : String(err);
