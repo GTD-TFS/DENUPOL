@@ -454,17 +454,6 @@
   </div>
 </div>
 
-<script>
-(async ()=>{
-  if (!('serviceWorker' in navigator)) return;
-  const regs = await navigator.serviceWorker.getRegistrations();
-  if (!regs.length) return;
-  await Promise.all(regs.map(r=>r.unregister()));
-  const keys = await caches.keys();
-  await Promise.all(keys.map(k=>caches.delete(k)));
-  location.reload(); // 1 vez, ya limpio
-})();
-</script>
 
 <script type="module">
 import { db, serverTimestamp } from "./firebase.js";
@@ -1152,9 +1141,15 @@ async function saveFinal(){
       finalizedAt: serverTimestamp()
     }, { merge: true });
 
-    const msg = $("doneMsg");
-    if (msg) msg.style.display = "block";
-    alert("Formulario finalizado.");
+    document.body.innerHTML = `
+      <div style="min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:28px">
+        <div style="max-width:720px;width:100%;text-align:center;border:1px solid rgba(255,255,255,.10);border-radius:18px;padding:18px;background:rgba(255,255,255,.06);backdrop-filter:blur(10px) saturate(130%);-webkit-backdrop-filter:blur(10px) saturate(130%);box-shadow:0 18px 46px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.06)">
+          <h2 style="margin:0 0 10px;font-weight:900;letter-spacing:.2px">Denuncia enviada correctamente</h2>
+          <p style="margin:0;color:rgba(255,255,255,.72)">Este enlace ya no puede volver a utilizarse.</p>
+        </div>
+      </div>
+    `;
+    return;
 
   }catch(err){
     const m = (err && err.message) ? err.message : String(err);
@@ -1165,9 +1160,23 @@ async function saveFinal(){
 function loadIfAny(){
   const raw = localStorage.getItem(storageKey());
   if (!raw) return;
-  try{
-    const x = JSON.parse(raw);
 
+  let x = null;
+  try{ x = JSON.parse(raw); }catch(_){ return; }
+
+  if (x && x.estado === "FINALIZADA"){
+    document.body.innerHTML = `
+      <div style="min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:28px">
+        <div style="max-width:720px;width:100%;text-align:center;border:1px solid rgba(255,255,255,.10);border-radius:18px;padding:18px;background:rgba(255,255,255,.06);backdrop-filter:blur(10px) saturate(130%);-webkit-backdrop-filter:blur(10px) saturate(130%);box-shadow:0 18px 46px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.06)">
+          <h2 style="margin:0 0 10px;font-weight:900;letter-spacing:.2px">Denuncia enviada correctamente</h2>
+          <p style="margin:0;color:rgba(255,255,255,.72)">Este enlace ya no puede volver a utilizarse.</p>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  try{
     // Filiación
     const f = x.filiacion || {};
     $("fNombre").value = f["Nombre"]||"";
