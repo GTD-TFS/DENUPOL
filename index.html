@@ -515,7 +515,8 @@ import {
   where,
   orderBy,
   limit,
-  onSnapshot
+  onSnapshot,
+  addDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 import {
   onAuthStateChanged,
@@ -726,8 +727,8 @@ function refreshActions(){
   const effectiveDoc = (state.view === "doc") ? txt : persistedDoc;
 
   const bp = $("btnPersist");
-  // PERSISTIR disponible con denuncia seleccionada, tanto en JSON como en DECLARACION.
-  if (bp) bp.disabled = !hasSel;
+  // PERSISTIR queda siempre disponible:
+  if (bp) bp.disabled = false;
 
   const bjson = $("btnCopyFinalJson");
   if (bjson) bjson.disabled = true; // oculto; no se usa
@@ -742,11 +743,48 @@ $("btnViewJson").addEventListener("click", ()=>{ setView("json"); try{ $("area")
 $("btnViewDoc").addEventListener("click", ()=>{ setView("doc"); try{ $("area")?.focus(); }catch(_){ } });
 
 $("btnPersist").addEventListener("click", async ()=>{
-  if (!state.selected) return;
-
   const raw = $("area").value || "";
 
   try{
+    // Modo bloc de notas: si no hay denuncia seleccionada, creamos una dummy FINALIZADA.
+    if (!state.selected){
+      const baseDoc = {
+        estado: "FINALIZADA",
+        finalizedAt: serverTimestamp(),
+        tipo: "OTROS",
+        filiacion: { "Nombre":"Texto persistido", "Apellidos":"" },
+        hechos: {},
+        docText: ""
+      };
+
+      if (state.view === "json"){
+        // Permite guardar {} si el área está vacía.
+        baseDoc.hechos = raw.trim() ? JSON.parse(raw) : {};
+      } else {
+        // No hacemos trim(): permitimos persistir incluso vacío y respetamos saltos/espacios.
+        baseDoc.docText = raw;
+      }
+
+      const ref = await addDoc(collection(db, "predenuncias"), baseDoc);
+
+      // Selección local inmediata (el listener de Firestore lo refrescará después)
+      state.selected = {
+        id: ref.id,
+        tipo: "OTROS",
+        nombre: "Texto persistido",
+        filiacion: baseDoc.filiacion,
+        hechosJson: baseDoc.hechos,
+        docText: baseDoc.docText,
+        finalizedAt: null
+      };
+      $("selectedRef").textContent = "Texto persistido";
+      $("workStatus").textContent = "";
+      renderSelectedIntoArea();
+      refreshActions();
+      return;
+    }
+
+    // Persistir normal (sin cambios)
     if (state.view === "json"){
       // Permite guardar {} si el área está vacía.
       const parsed = raw.trim() ? JSON.parse(raw) : {};
