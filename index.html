@@ -83,7 +83,42 @@ body{
   background:transparent;
 }
 
+#btnDownload{
+  border:1px solid #ef4444 !important;
+}
 .btn.pill.blue{border:1px solid #3b82f6;color:var(--label)}
+#btnPersist{border-color:#55f7f2 !important;}
+/* ===== BOTÓN QR (CSS) · MINIMAL & LEGIBLE ===== */
+.srOnly{
+  position:absolute !important;
+  width:1px;height:1px;
+  padding:0;margin:-1px;
+  overflow:hidden;clip:rect(0,0,0,0);
+  white-space:nowrap;border:0;
+}
+
+.qrBtn{
+  width:54px;
+  height:54px;
+  border-radius:14px; /* CUADRADO redondeado */
+  border:1px solid rgba(214,176,106,.55);
+  background:rgba(255,255,255,.06);
+  cursor:pointer;
+  position:relative;
+  box-shadow:
+    0 10px 26px rgba(0,0,0,.35),
+    inset 0 1px 0 rgba(255,255,255,.06);
+  backdrop-filter: blur(10px) saturate(130%);
+  -webkit-backdrop-filter: blur(10px) saturate(130%);
+
+  /* Icono QR limpio (SVG embebido). Sin fondo blanco, para que no parezca un "pegote". */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cg fill='%23d6b06a'%3E%3Cpath d='M6 6h20v20H6V6zm4 4v12h12V10H10z'/%3E%3Cpath d='M38 6h20v20H38V6zm4 4v12h12V10H42z'/%3E%3Cpath d='M6 38h20v20H6V38zm4 4v12h12V42H10z'/%3E%3Crect x='30' y='28' width='4' height='4'/%3E%3Crect x='34' y='32' width='4' height='4'/%3E%3Crect x='30' y='36' width='4' height='4'/%3E%3Crect x='40' y='28' width='4' height='4'/%3E%3Crect x='46' y='34' width='4' height='4'/%3E%3Crect x='52' y='28' width='4' height='4'/%3E%3Crect x='36' y='42' width='4' height='4'/%3E%3Crect x='42' y='46' width='4' height='4'/%3E%3Crect x='48' y='42' width='4' height='4'/%3E%3Crect x='54' y='48' width='4' height='4'/%3E%3Crect x='34' y='52' width='4' height='4'/%3E%3Crect x='40' y='54' width='4' height='4'/%3E%3C/g%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:center;
+  background-size:66% 66%;
+}
+.qrBtn:hover{ background-color:rgba(255,255,255,.10); }
+.qrBtn:active{ transform:translateY(1px); }
 #btnDownload{
   border:1px solid #ef4444 !important;
 }
@@ -334,7 +369,9 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
 
   <div class="topActions">
     <button class="btn pill gray" id="btnLogout">SALIR</button>
-    <button class="btn pill blue" id="btnGenToken">GENERADOR TOKEN</button>
+    <button class="qrBtn" id="btnGenToken" type="button" aria-label="Generador token (QR)">
+      <span class="srOnly">GENERADOR TOKEN</span>
+    </button>
   </div>
 
   <div class="main">
@@ -405,6 +442,8 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
     <div class="hint" style="margin-top:10px">Elige el tipo para generar el enlace del denunciante.</div>
 
     <div class="row" style="margin-top:12px">
+      <button class="btn pill gray" data-crime="GLOBAL" type="button">GLOBAL 🇪🇸</button>
+      <button class="btn pill gray" data-crime="GLOBAL INGLES" type="button">GLOBAL 🇬🇧</button>
       <button class="btn pill gray" data-crime="HURTO_RVI" type="button">HURTO Y RVI</button>
       <button class="btn pill gray" data-crime="ROBO_FUERZA" type="button">ROBO CON FUERZA</button>
       <button class="btn pill gray" data-crime="PATRIMONIO" type="button">COMERCIOS</button>
@@ -512,11 +551,12 @@ async function resolveDenunciantePage(tipo){
     "PATRIMONIO":  ["denunciante_patrimonio.html","patrimonio.html","denunciante.html"],
     "LESIONES":    ["denunciante_lesiones.html","lesiones.html","denunciante.html"],
     "AMENAZAS":    ["denunciante_amenazas.html","amenazas.html","denunciante.html"],
-    "DAÑOS":       ["denunciante_danos.html","danos.html","denunciante.html"]
+    "DAÑOS":       ["denunciante_danos.html","danos.html","denunciante.html"],
+    "GLOBAL":      ["global_esp.html","denunciante.html"],
+    "GLOBAL INGLES":      ["global_en_ui.html","denunciante.html"],
   };
   const base = new URL("./", location.href).href;
-  const list = C[tipo] || ["denunciante.html"];
-
+const list = C[tipo] || ["global_esp.html","denunciante.html"];
   for (const page of list){
     const url = base + page;
     try{
@@ -541,7 +581,6 @@ const state = {
   denuncias: [],
   selected: null, // {id, nombre, tipo, filiacion, hechosJson, docText}
   gptUrl: "https://chatgpt.com/g/g-69014d0cf61881918dd3773943228c6b-denupol",
-
   view: "json", // "json" | "doc"
   dirtyDoc: false
 };
