@@ -1,9 +1,18 @@
-const CACHE = "predenuncias-v15";
+const CACHE = "predenuncias-v16";
 
 const ASSETS = [
   "./",
   "./index.html",
+  "./global_es.html",
+  "./global_en_ui.html",
+  "./Registro odt-roa.html",
   "./denunciante_patrimonio.html",   // tu “otro html” (o el que sea)
+  "./denunciante.html",
+  "./denunciante_patrimonio.html",
+  "./denunciante_hurto_rvi.html",
+  "./denunciante_robo_fuerza.html",
+  "./denunciante_lesiones.html",
+  "./denunciante_amenazas.html",
   "./firebase.js",
   "./manifest.webmanifest",
   "./icon-192.png",
