@@ -338,6 +338,45 @@ textarea,
   #btnLogout,#btnGenToken,#btnViewJson,#btnViewDoc,#btnChatGPT,#btnPersist,#btnDownload{color:var(--label) !important;}
   .card .row > div:first-child{color:var(--label);}
 a.btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
+.modeToggle{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 12px;
+  border-radius:999px;
+
+  background:transparent;
+  border:1px solid transparent;
+
+  cursor:pointer;
+  font-weight:900;
+  color:var(--label);
+}
+
+.modeToggle:hover span{
+  opacity:1;
+}
+
+.modeToggle span{
+  transition:opacity .15s ease, transform .15s ease, filter .15s ease;
+  opacity:.30;
+}
+
+.modeToggle span.on{
+  opacity:1;
+  transform:scale(1.12);
+  filter:drop-shadow(0 0 6px rgba(214,176,106,.65));
+}
+
+.modeToggle .swap{
+  opacity:.45;
+}
+
+/* ===== MODO DETENIDOS (registros): ocultar editor/acciones de texto ===== */
+body.regMode .toolbar,
+body.regMode #area{
+  display:none !important;
+}
 </style>
 </head>
 <body>
@@ -367,12 +406,19 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
 <div id="app" hidden>
 <div class="wrap">
 
-  <div class="topActions">
-    <button class="btn pill gray" id="btnLogout">SALIR</button>
-    <button class="qrBtn" id="btnGenToken" type="button" aria-label="Generador token (QR)">
-      <span class="srOnly">GENERADOR TOKEN</span>
-    </button>
-  </div>
+ <div class="topActions">
+  <button class="btn pill gray" id="btnLogout">SALIR</button>
+
+  <button id="modeToggle" class="modeToggle" type="button">
+    <span id="modeLeft" class="on">👨🏼‍💼📋</span>
+    <span class="swap">⇄</span>
+    <span id="modeRight">⛓️🦸🏿‍♂️</span>
+  </button>
+
+  <button class="qrBtn" id="btnGenToken" type="button">
+    <span class="srOnly">GENERADOR TOKEN</span>
+  </button>
+</div>
 
   <div class="main">
     <div class="card">
@@ -390,6 +436,14 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
       <div class="row" style="justify-content:space-between">
         
         <div class="mono" id="selectedRef">—</div>
+        <button
+    id="btnGoRegistro"
+    class="btn pill gray"
+    type="button"
+    hidden
+  >
+    ➕ NUEVO DETENIDO
+  </button>
       </div>
 
       <div class="toolbar">
@@ -411,6 +465,7 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
               <button class="btn circle red" id="btnClear" type="button">X</button>
             </div>
             <div class="row" style="justify-content:flex-end;flex:1">
+             
               <button class="btn small secondary" id="btnChatGPT" type="button">CHATGPT</button>
             </div>
           </div>
@@ -502,6 +557,17 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
 /* ========= UTIL ========= */
 const $ = (id)=>document.getElementById(id);
 
+const btnGoRegistro = $("btnGoRegistro");
+
+function syncRegistroButton(){
+  if (!btnGoRegistro) return;
+  btnGoRegistro.hidden = (state.mode !== "registros");
+}
+
+btnGoRegistro.addEventListener("click", ()=>{
+  window.open("./Registro odt-roa.html", "_blank");
+});
+
 import { db, serverTimestamp, auth } from "./firebase.js";
 import {
   doc,
@@ -545,6 +611,12 @@ function sanitizeFileName(s){
     .trim()
     .replace(/\.+$/,"") || "predenuncia";
 }
+
+function ensureJsonExt(name){
+  name = String(name || "").trim();
+  if (!name) return "registro.json";
+  return /\.json$/i.test(name) ? name : (name + ".json");
+}
 async function resolveDenunciantePage(tipo){
   const C = {
     "HURTO_RVI":   ["denunciante_hurto_rvi.html","hurto_rvi.html","denunciante.html"],
@@ -579,11 +651,22 @@ async function buildDenuncianteLink(tipo, token){
 
 /* ========= ESTADO ========= */
 const state = {
+  // predenuncias
   denuncias: [],
   selected: null, // {id, nombre, tipo, filiacion, hechosJson, docText}
+
+  // registros (archivos JSON cifrados)
+  registros: [],
+  selectedReg: null, // {id, filename, encJson, createdAt}
+
+  // ui
   gptUrl: "https://chatgpt.com/g/g-69014d0cf61881918dd3773943228c6b-denupol",
   view: "json", // "json" | "doc"
-  dirtyDoc: false
+  dirtyDoc: false,
+  mode: "predenuncias", // "predenuncias" | "registros"
+
+  // auth
+  userUid: null
 };
 function setView(v){
   state.view = (v === "doc") ? "doc" : "json";
@@ -597,6 +680,21 @@ function setView(v){
 function renderSelectedIntoArea(){
   const a = $("area");
   if (!a) return;
+
+  if (state.mode === "registros"){
+    if (!state.selectedReg){
+      a.value = "";
+      return;
+    }
+    // En registros mostramos el JSON CIFRADO tal cual (ready-to-download para COMPAPOL)
+    a.value = String(state.selectedReg.encJson || "");
+    a.readOnly = false;
+    a.disabled = false;
+    try{ a.removeAttribute("readonly"); a.removeAttribute("disabled"); }catch(_){ }
+    return;
+  }
+
+  // modo predenuncias
   if (!state.selected){
     a.value = "";
     return;
@@ -612,6 +710,141 @@ function renderSelectedIntoArea(){
     a.disabled = false;
     try{ a.removeAttribute("readonly"); a.removeAttribute("disabled"); }catch(_){ }
   }
+}
+
+function setMode(m){
+  state.mode = (m === "registros") ? "registros" : "predenuncias";
+  // limpiar selección cruzada
+  if (state.mode === "predenuncias") state.selectedReg = null;
+  if (state.mode === "registros") state.selected = null;
+
+
+
+  // Modo registros (detenidos): ocultar editor/acciones de texto
+  try{
+    document.body.classList.toggle("regMode", state.mode === "registros");
+  }catch(_){ }
+
+  renderCurrentList();
+  renderSelectedIntoArea();
+  refreshActions();
+  syncModeToggle();
+  syncRegistroButton();
+}
+
+function syncModeToggle(){
+  const l = $("modeLeft");
+  const r = $("modeRight");
+  if (!l || !r) return;
+
+  if (state.mode === "registros"){
+    l.classList.remove("on");
+    r.classList.add("on");
+  } else {
+    r.classList.remove("on");
+    l.classList.add("on");
+  }
+}
+
+function renderCurrentList(){
+  if (state.mode === "registros") renderRegistros();
+  else renderDenuncias();
+}
+/* ========= FIRESTORE: LISTENER (registros cifrados) ========= */
+function startRegistrosListener(uid){
+  const q = query(
+    collection(db, "registros"),
+    where("ownerUid", "==", uid),
+    orderBy("createdAt", "desc"),
+    limit(50)
+  );
+
+  return onSnapshot(q, (snap)=>{
+    const out = [];
+    snap.forEach((d)=>{
+      const x = d.data() || {};
+      out.push({
+        id: d.id,
+        filename: (x.filename || x.name || "registro.json").toString(),
+        encJson: (x.encJson || x.enc || x.payload || "").toString(),
+        createdAt: x.createdAt || null
+      });
+    });
+
+    state.registros = out;
+    if (state.mode === "registros") renderRegistros();
+
+    if (state.selectedReg){
+      const nx = out.find(z=>z.id===state.selectedReg.id);
+      if (nx){ state.selectedReg = nx; renderSelectedIntoArea(); }
+    }
+  }, (err)=>{
+    console.warn("onSnapshot registros error", err);
+    const m = (err && err.message) ? err.message : String(err);
+    $("denStatus").textContent = "ERROR Firebase: " + m;
+  });
+}
+
+/* ========= UI: REGISTROS LIST ========= */
+function renderRegistros(){
+  const box = $("denList");
+  box.innerHTML = "";
+  const status = $("denStatus");
+  if (!state.registros.length){
+    if (status) status.textContent = "";
+    return;
+  }
+  if (status) status.textContent = "";
+
+  for (const r of state.registros){
+    const el = document.createElement("div");
+    el.className = "item";
+
+    const left = document.createElement("div");
+    left.className = "left";
+    left.innerHTML = `<div class="t">${escapeHtml(r.filename)}</div>`;
+    el.appendChild(left);
+
+    const del = document.createElement("button");
+    del.type = "button";
+    del.className = "iconBtn";
+    del.title = "Eliminar";
+    del.textContent = "X";
+    del.addEventListener("click", async (ev)=>{
+      ev.stopPropagation();
+      const ok = confirm("¿Eliminar este registro?");
+      if (!ok) return;
+      try{
+        await deleteDoc(doc(db, "registros", r.id));
+        if (state.selectedReg && state.selectedReg.id === r.id){
+          state.selectedReg = null;
+          $("selectedRef").textContent = "—";
+          $("area").value = "";
+          refreshActions();
+        }
+      }catch(err){
+        const m = (err && err.message) ? err.message : String(err);
+        alert("ERROR al eliminar: " + m);
+      }
+    });
+    el.appendChild(del);
+
+    el.addEventListener("click", ()=>selectRegistro(r.id));
+    box.appendChild(el);
+  }
+}
+
+function selectRegistro(id){
+  const r = state.registros.find(x=>x.id===id);
+  if (!r) return;
+  state.selectedReg = r;
+  state.selected = null;
+  state.dirtyDoc = false;
+
+  $("selectedRef").textContent = r.filename;
+  $("workStatus").textContent = "";
+  renderSelectedIntoArea();
+  refreshActions();
 }
 
 
@@ -719,20 +952,23 @@ function selectDenuncia(id){
 
 /* ========= UI: ACTION BUTTONS ========= */
 function refreshActions(){
-  const hasSel = !!state.selected;
-  const a = $("area");
-  const txt = (a && a.value) ? a.value.trim() : "";
-
-  const persistedDoc = (state.selected && state.selected.docText) ? String(state.selected.docText).trim() : "";
-  const effectiveDoc = (state.view === "doc") ? txt : persistedDoc;
-
   const bp = $("btnPersist");
-  // PERSISTIR queda siempre disponible:
-  if (bp) bp.disabled = false;
+  const bd = $("btnDownload");
+
+  if (state.mode === "registros"){
+    // En registros: no hay persistencia de área (se persiste desde Registro), sólo descarga del archivo seleccionado.
+    if (bp) bp.disabled = true;
+    if (bd) bd.disabled = !state.selectedReg;
+    return;
+  }
+
+  // predenuncias
+  const hasSel = !!state.selected;
+  if (bp) bp.disabled = false; // PERSISTIR queda siempre disponible
+  if (bd) bd.disabled = !hasSel;
 
   const bjson = $("btnCopyFinalJson");
   if (bjson) bjson.disabled = true; // oculto; no se usa
-  $("btnDownload").disabled = !hasSel;
 }
 $("area").addEventListener("input", ()=>{
   // Mantenemos dirtyDoc por si lo quieres usar para UI, pero ya no bloquea PERSISTIR.
@@ -830,8 +1066,14 @@ $("btnClear").addEventListener("click", ()=>{
   $("workStatus").textContent = "";
 });
 
+
+
 $("btnChatGPT").addEventListener("click", ()=>{
   window.open(state.gptUrl, "_blank", "noopener");
+});
+
+$("modeToggle").addEventListener("click", ()=>{
+  setMode(state.mode === "registros" ? "predenuncias" : "registros");
 });
 
 const __btnCopyFinalJson = $("btnCopyFinalJson");
@@ -854,12 +1096,50 @@ if (__btnCopyFinalJson){
 
 $("btnDownload").addEventListener("click", async ()=>{
   try{
+    // REGISTROS: descarga el JSON cifrado tal cual
+    if (state.mode === "registros"){
+      if (!state.selectedReg) return;
+      const encText = String($("area").value || state.selectedReg.encJson || "");
+      const nombre = ensureJsonExt(sanitizeFileName(state.selectedReg.filename || "registro"));
+      const blob = new Blob([encText], {type:"application/json;charset=utf-8"});
+
+      // 1) Móvil: Share API
+      if (navigator.canShare){
+        try{
+          const file = new File([blob], nombre, {type:"application/json"});
+          if (navigator.canShare({ files: [file] })){
+            await navigator.share({ files:[file], title:nombre, text:"JSON cifrado" });
+            return;
+          }
+        }catch(e){ /* ignore and continue */ }
+      }
+
+      // 2) PC: selector de ubicación (Save As)
+      if (window.showSaveFilePicker){
+        try{
+          const handle = await window.showSaveFilePicker({
+            suggestedName: nombre,
+            types: [{ description: "JSON", accept: { "application/json": [".json"] } }]
+          });
+          const w = await handle.createWritable();
+          await w.write(blob);
+          await w.close();
+          return;
+        }catch(e){ /* cancelado o no permitido */ }
+      }
+
+      // 3) Fallback: modal con descarga manual + copiar
+      const url = URL.createObjectURL(blob);
+      openExportModal(url, encText, nombre);
+      return;
+    }
+
+    // PREDENUNCIAS: exporta snapshot {doc,filiaciones}
     if (!state.selected) return;
 
     const inArea = ($("area").value || "").trim();
     const persistedDoc = (state.selected && state.selected.docText) ? String(state.selected.docText).trim() : "";
     const docText = (state.view === "doc") ? inArea : persistedDoc;
-    // Permitimos exportar aunque esté vacío (doc: "").
 
     const finalJson = { doc: (docText || ""), filiaciones: [ state.selected.filiacion ] };
     const nombre = sanitizeFileName(`${state.selected.filiacion["Nombre"]||""} ${state.selected.filiacion["Apellidos"]||""}`) + ".json";
@@ -996,6 +1276,7 @@ $("btnLogout").addEventListener("click", async ()=>{
 /* ========= INIT (AUTH-GATED) ========= */
 const appRoot = document.getElementById("app");
 let __unsubPred = null;
+let __unsubRegs = null;
 const gate = document.getElementById("loginGate");
 const loginForm = document.getElementById("loginForm");
 const loginStatus = document.getElementById("loginStatus");
@@ -1036,17 +1317,27 @@ onAuthStateChanged(auth, async (user)=>{
   if (user){
     if (appRoot) appRoot.hidden = false;
     hideGate();
-    renderDenuncias();
+    setMode("predenuncias");
+    try{ document.body.classList.remove("regMode"); }catch(_){ }
+    renderCurrentList();
     refreshActions();
     setView("json");
     if (!__unsubPred) __unsubPred = startFirestoreListener();
+    state.userUid = user.uid || null;
+    if (!__unsubRegs && state.userUid) __unsubRegs = startRegistrosListener(state.userUid);
   } else {
     if (__unsubPred){ try{ __unsubPred(); }catch(_){ } __unsubPred = null; }
+    if (__unsubRegs){ try{ __unsubRegs(); }catch(_){ } __unsubRegs = null; }
     state.selected = null;
     state.denuncias = [];
     state.view = "json";
     state.dirtyDoc = false;
+    state.registros = [];
+    state.selectedReg = null;
+    state.mode = "predenuncias";
+    state.userUid = null;
     try{ const a = $("area"); if (a) a.value = ""; }catch(_){ }
+    try{ document.body.classList.remove("regMode"); }catch(_){ }
     if (appRoot) appRoot.hidden = true;
     showGate();
   }
