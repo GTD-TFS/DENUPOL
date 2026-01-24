@@ -1,0 +1,2606 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+
+<meta name="theme-color" content="#081423">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<!-- Diccionarios (misma carpeta) -->
+<script src="./paises.js"></script>
+<script src="./countries.js"></script>
+<script src="./provincias_es.js"></script>
+<script src="./municipios.js"></script>
+<title>Complainant · GLOBAL</title>
+<style>
+  :root{
+    /* Fondo tipo “glass” azul petróleo (alineado con Panel Policía) */
+    --bg0:#081423;
+    --bg1:#0b1e2f;
+    --bg2:#0a2233;
+
+    /* Superficies */
+    --card: rgba(255,255,255,.06);
+    --card2: rgba(255,255,255,.10);
+
+    /* Bordes y texto */
+    --edge: rgba(255,255,255,.10);
+    --edge2: rgba(255,255,255,.14);
+    --txt: rgba(255,255,255,.92);
+    --muted: rgba(255,255,255,.62);
+
+    /* Acentos */
+    --acc:#3b82f6;
+    --ok:#22c55e;
+    --warn:#f59e0b;
+    --danger:#ef4444;
+
+    /* Labels (dorado) */
+    --label:#d6b06a;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+    color:var(--txt);
+    background:
+      radial-gradient(1200px 700px at 20% -10%, rgba(10,132,255,.18), transparent 60%),
+      radial-gradient(900px 600px at 90% 10%, rgba(52,199,89,.10), transparent 55%),
+      linear-gradient(180deg, #0b0f14, #0a0d12);
+    min-height:100dvh;
+    overflow-x:hidden;
+  }
+  html, body{max-width:100%; overflow-x:hidden}
+  /* ===== WIZARD: en móvil no debe haber scroll fuera de FILIACIÓN ===== */
+  body.noScroll{overflow:hidden;height:100dvh}
+  body.noScroll .wrap{height:100dvh;overflow:hidden;padding:16px 12px}
+  body.noScroll .card{
+    height:calc(100dvh - 32px);
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    padding-bottom:calc(14px + env(safe-area-inset-bottom));
+  }
+  body.noScroll #boxFiliacion{display:none!important}
+  body.noScroll #wizard{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;position:relative}
+  body.noScroll #dynSteps{flex:1;min-height:0;overflow:hidden}
+  body.noScroll .step.isActive{flex:1;min-height:0}
+  body.noScroll .stepPanel{flex:1;min-height:0;overflow:hidden;overflow-x:hidden}
+  body.noScroll .navRow{
+    margin-top:auto;
+    position:sticky;
+    bottom:0;
+    background:rgba(8,20,35,.55);
+    backdrop-filter:blur(10px) saturate(130%);
+    -webkit-backdrop-filter:blur(10px) saturate(130%);
+    padding:10px 0 calc(10px + env(safe-area-inset-bottom));
+  }
+
+  .wrap{max-width:1050px;margin:0 auto;padding:22px 16px 26px}
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--edge);
+    border-radius:18px;
+    padding:14px;
+    box-shadow:
+      0 18px 46px rgba(0,0,0,.35),
+      inset 0 1px 0 rgba(255,255,255,.06);
+    backdrop-filter:blur(10px) saturate(130%);
+    -webkit-backdrop-filter:blur(10px) saturate(130%);
+  }
+
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:100%}
+  .grid > *{min-width:0}
+  @media(max-width:720px){.grid{grid-template-columns:1fr}}
+
+  .h1{font-weight:900;font-size:18px;margin:0;text-align:center;width:100%}
+  .muted{color:var(--muted);font-size:12px}
+  .titleWrap{width:100%}
+
+  label{display:block;font-size:12px;color:var(--label);margin:10px 0 6px;font-weight:900;letter-spacing:.25px}
+  input[type="date"],input[type="time"]{
+    width:100%;
+    max-width:100%;
+    min-width:0;
+    display:block;
+    text-align:center;
+    -webkit-appearance:none;
+    appearance:none;
+  }
+
+  input,select,textarea{
+  min-width:0;
+  max-width:100%;
+    width:100%;
+    border:1px solid var(--edge2);
+    border-radius:14px;
+    background:rgba(255,255,255,.06);
+    color:var(--txt);
+    padding:12px;
+    outline:none;
+    font-size:13px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+  }
+  input:focus,select:focus,textarea:focus{
+    border-color: rgba(214,176,106,.55);
+    box-shadow:
+      0 0 0 3px rgba(214,176,106,.12),
+      inset 0 1px 0 rgba(255,255,255,.04);
+  }
+
+  textarea{min-height:120px;resize:vertical}
+  /* Resumen: más alto */
+  .step[data-key="resumen"] textarea{min-height:260px}
+
+  .btn{
+    border:1px solid var(--edge);
+    border-radius:12px;
+    padding:12px 12px;
+    background:rgba(59,130,246,.20);
+    color:var(--label);
+    font-weight:800;
+    letter-spacing:.3px;
+    cursor:pointer;
+  }
+  .btn:active{transform:translateY(1px)}
+
+  .btn.ok{background:rgba(34,197,94,.18);color:var(--label)}
+  .btn.danger{background:rgba(239,68,68,.16);color:var(--label)}
+  .btn.secondary{background:rgba(255,255,255,.06);color:var(--label)}
+
+  .hr{height:1px;background:var(--edge);margin:14px 0}
+
+  .hidden{display:none!important}
+  #boxFiliacion.isHidden{display:none!important}
+#boxFiliacion.isHidden + .hrAfterFiliacion{display:none!important}
+
+  pre{
+    white-space:pre-wrap;
+    word-break:break-word;
+    border:1px solid var(--edge);
+    border-radius:12px;
+    padding:12px;
+    background:rgba(0,0,0,.12);
+    font-size:12px;
+  }
+
+  .modalBack{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.78);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:18px;
+    overflow:auto;
+  }
+  .modal{
+    width:min(720px,96vw);
+    max-height:calc(100vh - 36px);
+    overflow:auto;
+    background:rgba(17,28,51,.96);
+    border:1px solid var(--edge);
+    border-radius:18px;
+    padding:14px;
+  }
+
+  /* Modal en móvil: pantalla completa y sin “márgenes” raros */
+  @media(max-width:720px){
+    .modalBack{
+      padding:0;
+      align-items:stretch;
+      justify-content:stretch;
+    }
+    .modal{
+      width:100vw;
+      max-height:100vh;
+      min-height:100vh;
+      border-radius:0;
+    }
+  }
+
+  /* Filas de objetos */
+  .objCard{
+    border:1px solid var(--edge);
+    background:rgba(0,0,0,.12);
+    border-radius:16px;
+    padding:12px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+  }
+
+  .objRow{
+    display:grid;
+    grid-template-columns:1fr 96px 120px 44px;
+    gap:8px;
+    align-items:center;
+    width:100%;
+    max-width:100%;
+  }
+  .objRow > *{min-width:0}
+
+  /* Móvil: Tipo arriba (sin X); Cantidad+Valor y X abajo */
+  @media(max-width:720px){
+    .objRow{
+      grid-template-columns:1fr 1fr 44px;
+      grid-template-areas:
+        "tipo tipo tipo"
+        "cant val del";
+      align-items:stretch;
+    }
+    .objRow .objTipo{grid-area:tipo}
+    .objRow .objCant{grid-area:cant}
+    .objRow .objVal{grid-area:val}
+    .objRow .objDel{grid-area:del}
+  }
+  .modalHead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .modalTitle{font-weight:900}
+
+  .btn.small{padding:10px 12px;border-radius:10px}
+
+  /* Evita el zoom al pulsar inputs en iPhone */
+  @media(max-width:720px){
+    .wrap{padding:16px 12px 22px}
+    input,select,textarea{font-size:16px}
+  }
+  .wizard{display:flex;flex-direction:column;gap:10px}
+  .step{display:none}
+  /* El paso activo ocupa altura y centra contenido (píldoras) */
+  .step.isActive{
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-start;
+    min-height:calc(100vh - 260px);
+  }
+  /* En el paso 0 solo se ve la filiación (arriba); no mostramos un panel centrado adicional */
+  .wizard[data-step0="1"] .step[data-step="0"],
+  .step[data-step="0"]{display:none !important;}
+  @media(max-width:720px){
+    .step.isActive{min-height:calc(100vh - 220px);}
+  }
+
+  /* Panel visible detrás de las opciones (no “flotando” sin contenedor) */
+  .stepPanel{
+    width:100%;
+    border:1px solid var(--edge);
+    background:rgba(0,0,0,.14);
+    border-radius:16px;
+    padding:14px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    min-height:56vh;
+    max-width:100%;
+  }
+  /* iOS/Safari: evita overflow horizontal en inputs nativos */
+  input{max-inline-size:100%}
+  .stepTitle{display:none}
+  .navRow{display:flex;gap:10px;justify-content:space-between;align-items:center;margin-top:12px}
+  @media(max-width:720px){
+    .navRow{margin-top:auto;padding-top:10px}
+  }
+  .navRow .left{display:flex;gap:10px}
+  .pill{min-width:110px}
+  .progress{font-size:12px;color:var(--muted)}
+  .choices{display:flex;flex-direction:column;gap:8px}
+  .choices .btn{width:100%;text-align:left}
+
+  /* Píldoras seleccionables */
+  .choiceBtn{
+    border:1px solid var(--edge);
+    border-radius:999px;
+    padding:12px 14px;
+    background:rgba(255,255,255,.06);
+    color:var(--txt);
+    font-weight:800;
+    letter-spacing:.3px;
+    cursor:pointer;
+  }
+  .choiceBtn.isPicked{
+    border-color:rgba(59,130,246,.75);
+    background:rgba(59,130,246,.22);
+  }
+  /* Píldoras: una debajo de otra, centradas */
+  .choices.pills{flex-direction:column;gap:28px;align-items:stretch}
+  .choices.pills .choiceBtn{width:100%;text-align:center;padding:18px 18px}
+  .choices.pills{
+    width:100%;
+    max-width:720px;
+    margin:0 auto;
+  }
+
+  /* Evita el zoom al pulsar inputs en iPhone */
+  @media(max-width:720px){
+    input,select,textarea{font-size:16px}
+  }
+  /* ===== Picker (píldoras) países / nacimiento ===== */
+.picker{border:1px solid var(--edge2);border-radius:14px;background:rgba(255,255,255,.06);padding:10px;box-shadow: inset 0 1px 0 rgba(255,255,255,.04)}
+.pickerTop{display:flex;gap:10px;align-items:center}
+.pillList{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px}
+.subGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:720px){.subGrid{grid-template-columns:1fr}}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="row" style="justify-content:space-between">
+  <div class="titleWrap">
+    <div class="h1" id="pageTitle"></div>
+    <div class="muted" id="metaLine" style="display:none"></div>
+  </div>
+</div>
+
+    <div class="hr"></div>
+
+    <div id="boxFiliacion">
+      
+
+      <div class="grid">
+        <div>
+          <label>First name</label>
+          <input id="fNombre" autocomplete="given-name" />
+        </div>
+        <div>
+          <label>Last name(s)</label>
+          <input id="fApellidos" autocomplete="family-name" />
+        </div>
+
+        <div>
+          <label>Document type</label>
+          <select id="fTipoDoc">
+            <option value="Pasaporte">Passport</option>
+            <option value="Carta Nacional de Identidad">National Identity Card</option>
+            <option value="NIE">NIE</option>
+            <option value="Indocumentado">Undocumented</option>
+            <option value="Otro documento de Identidad">Other identity document</option>
+          </select>
+        </div>
+        <div id="boxOtroDoc" class="hidden">
+          <label>Other document</label>
+          <input id="fOtroDoc" />
+        </div>
+        <div>
+          <label>Document number</label>
+          <input id="fNumDoc" />
+        </div>
+
+        <div>
+          <label>Sex</label>
+          <select id="fSexo">
+            <option value=""></option>
+            <option value="HOMBRE">MALE</option>
+            <option value="MUJER">FEMALE</option>
+          </select>
+        </div>
+
+        <div style="grid-column:1/-1">
+          <label>Parents' names</label>
+          <input id="fPadres" />
+        </div>
+
+        <div style="grid-column:1/-1">
+  <label>Nationality</label>
+  <div class="picker">
+    <div class="pickerTop">
+      <input id="fNac" placeholder="Search country..." />
+    </div>
+    <div class="pillList" id="nacPills"></div>
+  </div>
+</div>
+        <div>
+          <label>Date of birth</label>
+          <input id="fNacFecha" type="date" />
+        </div>
+
+        
+<div style="grid-column:1/-1">
+  <label>Place of birth</label>
+  <div class="picker">
+    <div class="pickerTop">
+      <input id="fNacPais" placeholder="Search country..." />
+    </div>
+    <div class="pillList" id="nacPaisPills"></div>
+
+    <div class="subGrid" id="nacEsBox" style="margin-top:10px;display:none">
+      <div>
+        <label>Province</label>
+        <select id="fNacProv"></select>
+      </div>
+      <div>
+        <label>Municipality</label>
+        <select id="fNacMun"></select>
+      </div>
+    </div>
+
+    <input id="fNacLugar" type="hidden" />
+    <input id="fNacProvOut" type="hidden" />
+    <input id="fNacMunOut" type="hidden" />
+  </div>
+</div>
+        <div>
+          <label>Phone</label>
+          <input id="fTel" inputmode="numeric" />
+        </div>
+
+        <div style="grid-column:1/-1">
+          <label>Address</label>
+          <div class="picker">
+            <div class="pickerTop">
+              <input id="fDomPais" placeholder="Search country..." />
+            </div>
+            <div class="pillList" id="domPaisPills"></div>
+
+            <div class="subGrid" id="domEsBox" style="margin-top:10px;display:none">
+              <div>
+                <label>Province</label>
+                <select id="fDomProv"></select>
+              </div>
+              <div>
+                <label>Municipality</label>
+                <select id="fDomMun"></select>
+              </div>
+            </div>
+
+            <div style="margin-top:10px">
+              <label>Street address</label>
+              <input id="fDomDir" placeholder="Street, number, apartment..." />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hr hrAfterFiliacion"></div>
+
+    <div class="wizard" id="wizard" data-step0="1">
+      <div class="progress" id="wizProgress">—</div>
+
+      <!-- Pasos dinámicos (1 pregunta por pantalla) -->
+      <div id="dynSteps"></div>
+
+      <div class="navRow">
+        <div class="left">
+          <button class="btn secondary pill" id="btnPrev" type="button">BACK</button>
+        </div>
+        <div class="left">
+          <button class="btn pill" id="btnNext" type="button">NEXT</button>
+          <button class="btn ok pill" id="btnFinish" type="button" style="display:none">SUBMIT</button>
+        </div>
+      </div>
+
+      <div class="status" id="wizStatus"></div>
+    </div>
+
+    <div class="row" style="justify-content:flex-end;display:none">
+      <button class="btn ok" id="btnFinalizar" type="button">SUBMIT</button>
+    </div>
+
+    <div class="hr"></div>
+    <div class="muted" id="doneMsg" style="display:none">Form submitted successfully.</div>
+  </div>
+</div>
+
+<div class="modalBack" id="objsBack" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="modalHead">
+      <div class="modalTitle">Items</div>
+      <button class="btn small secondary" id="btnCloseObjs" type="button">Close</button>
+    </div>
+
+
+    <div id="objsList" style="margin-top:10px;display:flex;flex-direction:column;gap:10px"></div>
+
+    <div class="row" style="justify-content:space-between;margin-top:12px">
+      <button class="btn secondary" id="btnAddObj" type="button">+</button>
+      <button class="btn ok" id="btnSaveObjs" type="button">SAVE</button>
+    </div>
+  </div>
+</div>
+<script>
+(async ()=>{
+  if (!('serviceWorker' in navigator)) return;
+  const regs = await navigator.serviceWorker.getRegistrations();
+  if (!regs.length) return;
+  await Promise.all(regs.map(r=>r.unregister()));
+  const keys = await caches.keys();
+  await Promise.all(keys.map(k=>caches.delete(k)));
+  location.reload(); // 1 vez, ya limpio
+})();
+</script>
+
+<script type="module">
+import { db, serverTimestamp } from "./firebase.js";
+import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+const $ = (id)=>document.getElementById(id);
+const qs = new URLSearchParams(location.search);
+const token = (qs.get("token")||"").trim();
+const tipo = (qs.get("tipo")||"PATRIMONIO").trim().toUpperCase();
+
+function applyTipoDocVisibility(){
+  const sel = $("fTipoDoc");
+  const box = document.getElementById("boxOtroDoc");
+  if (!sel || !box) return;
+  const v = (sel.value || "").trim();
+  box.classList.toggle("hidden", v !== "Otro documento de Identidad");
+}
+$("fTipoDoc")?.addEventListener("change", applyTipoDocVisibility);
+function normUp(s){
+  // Quita tildes/diacríticos PERO conserva Ñ.
+  // Truco: protegemos Ñ antes de normalizar y la restauramos al final.
+  const mark = "__ENYE__";
+  return (s||"").toString()
+    .replace(/ñ/gi, mark)
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(new RegExp(mark, "g"), "Ñ")
+    .toUpperCase().replace(/\s+/g," ").trim();
+}
+
+// ===== UI language (English) - internal values remain Spanish =====
+const UI_EN = {
+  // ===== GLOBAL / ENTRY =====
+  
+  "CARACTERÍSTICAS DEL HECHO": "INCIDENT CATEGORY",
+  "SUSTRACCIÓN": "THEFT",
+  "DAÑOS": "PROPERTY DAMAGE",
+  "AGRESIÓN": "ASSAULT / INJURY",
+  "AMENAZAS": "THREATS",
+  "CARÁCTER SEXUAL": "SEXUAL OFFENCE",
+  "OTROS": "OTHER",
+
+  // ===== SELECTORES =====
+  "¿DÓNDE SE PRODUCE LA SUSTRACCIÓN?": "WHERE DID THE THEFT OCCUR?",
+  "A LA PERSONA": "FROM A PERSON",
+  "EN COMERCIO (HORARIO LABORAL)": "IN A SHOP (OPEN HOURS)",
+  "EN DOMICILIO / ESTABLECIMIENTO": "IN A HOME / PREMISES",
+
+  "TIPO DE AGRESIÓN": "TYPE OF ASSAULT",
+  "ENTORNO FAMILIAR / AFECTIVO": "FAMILY / INTIMATE CONTEXT",
+  "OTRO (NO FAMILIAR)": "OTHER (NON-FAMILY)",
+
+  // ===== COMUNES =====
+  "DENUNCIA EN CALIDAD DE...": "REPORTING AS...",
+  "PERJUDICADO": "VICTIM",
+  "TESTIGO": "WITNESS",
+  "REPRESENTANTE LEGAL": "LEGAL REPRESENTATIVE",
+  "EMPLEADO DE COMERCIO AFECTADO": "AFFECTED EMPLOYEE",
+
+  "FECHA, HORA Y LUGAR DEL HECHO": "DATE, TIME AND LOCATION",
+  "FECHA, INTERVALO HORARIO Y LUGAR DEL HECHO": "DATE, TIME RANGE AND LOCATION",
+  "FECHA, INTERVALO HORARIO Y LUGAR DEL HECHO": "DATE, TIME RANGE AND LOCATION",
+  "FECHA, INTERVALO HORARIO Y LUGAR DEL HECHO": "DATE, TIME RANGE AND LOCATION",
+  "FECHA, INTERVALO HORARIO Y LUGAR DEL HECHO": "DATE, TIME RANGE AND LOCATION",
+  "FECHA, INTERVALO HORARIO Y LUGAR DEL HECHO": "DATE, TIME RANGE AND LOCATION",
+  "FECHA, INTERVALO HORARIO Y LUGAR DEL HECHO": "DATE, TIME RANGE AND LOCATION",
+
+  "Calle / establecimiento / municipio": "Street / premises / city",
+  "Calle / zona / municipio": "Street / area / city",
+  "Domicilio / establecimiento / municipio": "Home / premises / city",
+
+  "¿CÓMO TIENE CONOCIMIENTO DEL HECHO?": "HOW DID YOU BECOME AWARE OF THE INCIDENT?",
+  "A TRAVÉS DE LA POLICÍA": "THROUGH THE POLICE",
+  "EMPRESA DE SEGURIDAD": "SECURITY COMPANY",
+  "POR TERCERAS PERSONAS": "THROUGH THIRD PARTIES",
+  "DESCUBRIMIENTO POSTERIOR AL HECHO": "DISCOVERED AFTERWARDS",
+  "TESTIGO DE LOS HECHOS": "WITNESS TO THE INCIDENT",
+  "TESTIGO DIRECTO": "DIRECT WITNESS",
+  "CAMARAS DE SEGURIDAD": "CCTV",
+  "TRAS COMPROBAR PROPIEDAD FALTANTE": "AFTER NOTICING PROPERTY MISSING",
+
+  // ===== HURTO_RVI =====
+  "¿INTERACCIÓN CON EL AUTOR?": "DID YOU INTERACT WITH THE OFFENDER?",
+  "NO": "NO",
+  "SI, COMUNICACION / ACERCAMIENTO": "YES, COMMUNICATION / APPROACH",
+  "SI, FORCEJEO O AGRESION": "YES, STRUGGLE OR ASSAULT",
+  "SI, INTIMIDACION SIN CONTACTO": "YES, THREATS WITHOUT CONTACT",
+  "¿PRESENTA LESIONES?": "DO YOU HAVE INJURIES?",
+  "SI": "YES",
+  "DESCRIBA BREVEMENTE LAS LESIONES": "BRIEFLY DESCRIBE THE INJURIES",
+  "¿APORTA PARTE MÉDICO?": "DO YOU PROVIDE A MEDICAL REPORT?",
+  "TIPO DE INTIMIDACIÓN": "TYPE OF THREAT/INTIMIDATION",
+  "OBJETOS SUSTRAÍDOS": "STOLEN ITEMS",
+  "DESCRIPCIÓN FÍSICA DEL AUTOR/ES": "PHYSICAL DESCRIPTION OF OFFENDER(S)",
+  "RESUMEN DE LOS HECHOS": "SUMMARY OF EVENTS",
+
+  // ===== PATRIMONIO =====
+  "¿COMO TIENE CONOCIMIENTO DEL HECHO?": "HOW DID YOU BECOME AWARE OF THE INCIDENT?",
+  "¿INTERACCION CON EL AUTOR?": "DID YOU INTERACT WITH THE OFFENDER?",
+  "SI, COMUNICACION": "YES, COMMUNICATION",
+  "¿APORTA INFORME MEDICO?": "DO YOU PROVIDE A MEDICAL REPORT?",
+  "¿AUTOR RETENIDO EN EL LUGAR?": "IS THE OFFENDER HELD ON SITE?",
+  "¿HAY CAMARAS DE SEGURIDAD?": "IS THERE CCTV?",
+  "SI, LAS APORTA EN ESTE ACTO": "YES, PROVIDED NOW",
+  "SI, LAS APORTARÁ EN SEDE JUDICIAL": "YES, WILL BE PROVIDED TO COURT",
+  "SI, FACILITA CONTACTO PARA SU GESTION": "YES, PROVIDE CONTACT FOR COLLECTION",
+  "GESTION DE GRABACIONES": "CCTV HANDLING",
+  "Establecimiento, contacto, ubicación, horario...": "Premises, contact, address, opening hours...",
+  "OBJETOS SUSTRAIDOS": "STOLEN ITEMS",
+  "BREVE RESUMEN DE LOS HECHOS": "BRIEF SUMMARY",
+
+  // ===== ROBO_FUERZA =====
+  "FECHA, INTERVALO HORARIO Y LUGAR DEL HECHO": "DATE, TIME RANGE AND LOCATION",
+  "MÉTODO DE ACCESO (BREVE)": "METHOD OF ENTRY (BRIEF)",
+  "Puerta forzada, ventana, escalo, rotura cerradura, ganzúa...": "Forced door, window, climbing, lock broken, lockpick...",
+  "¿SE PRODUJERON DAÑOS?": "WAS THERE DAMAGE?",
+  "¿APORTA PRESUPUESTO DE REPARACIÓN?": "DO YOU PROVIDE A REPAIR QUOTE?",
+  "DESCRIPCIÓN DE LOS DAÑOS": "DESCRIPTION OF DAMAGE",
+  "Describe brevemente los daños producidos...": "Briefly describe the damage...",
+  "VALORACIÓN / PRESUPUESTO DE REPARACIÓN": "VALUATION / REPAIR QUOTE",
+  "Importe, empresa, nº presupuesto, fecha...": "Amount, company, quote no., date...",
+  "¿HA MANIPULADO EL LUGAR DE LOS HECHOS? (PARA CONOCIMIENTO DE LA BRIGADA DE POLICÍA CIENTÍFICA)":
+    "HAVE YOU TOUCHED/MOVED ANYTHING AT THE SCENE? (FOR FORENSICS AWARENESS)",
+  "¿SE HA PRODUCIDO SUSTRACCIÓN?": "WAS ANYTHING STOLEN?",
+  "OBJETOS SUSTRAÍDOS": "STOLEN ITEMS",
+  "BREVE DESCRIPCIÓN FÍSICA DE LOS AUTORES": "BRIEF PHYSICAL DESCRIPTION OF OFFENDER(S)",
+  "Rasgos, ropa, edad aprox., altura, tatuajes...": "Features, clothing, approx. age, height, tattoos...",
+  "BREVE RESUMEN DE LOS HECHOS": "BRIEF SUMMARY",
+
+  // ===== DANOS =====
+  "DESCRIPCIÓN DE LOS DAÑOS": "DESCRIPTION OF DAMAGE",
+  "¿APORTA PRESUPUESTO DE REPARACIÓN?": "DO YOU PROVIDE A REPAIR QUOTE?",
+  "VALORACIÓN / PRESUPUESTO DE REPARACIÓN": "VALUATION / REPAIR QUOTE",
+
+  // ===== LESIONES =====
+  "DESCRIPCION DE LESIONES": "DESCRIPTION OF INJURIES",
+  "¿APORTA PARTE MEDICO?": "DO YOU PROVIDE A MEDICAL REPORT?",
+  "¿CONOCE AL AUTOR DE LOS HECHOS?": "DO YOU KNOW THE OFFENDER?",
+  "APORTE DATOS": "PROVIDE DETAILS",
+  "DESCRIPCIÓN DEL AUTOR/ES": "DESCRIPTION OF OFFENDER(S)",
+
+  // ===== AGRESION_FAMILIAR_AFECTIVO =====
+  "DENUNCIA EN CALIDAD DE...": "REPORTING AS...",
+  "VICTIMA": "VICTIM",
+  "TIPO DE AFECTIVIDAD": "RELATIONSHIP TYPE",
+  "AGRESIÓN DE PAREJA (HOMBRE A MUJER) - V. GÉNERO": "INTIMATE PARTNER VIOLENCE (MALE TO FEMALE) - GENDER VIOLENCE",
+  "RESTO DE CASOS - V. DOMÉSTICA": "OTHER CASES - DOMESTIC VIOLENCE",
+  "¿HAY CONVIVENCIA?": "DO YOU LIVE TOGETHER?",
+  "¿TIENE LESIONES?": "DO YOU HAVE INJURIES?",
+  "DESCRIBA LAS LESIONES": "DESCRIBE THE INJURIES",
+  "¿APORTA INFORME MEDICO?": "DO YOU PROVIDE A MEDICAL REPORT?",
+  "¿ES SU PAREJA ACTUAL?": "IS HE YOUR CURRENT PARTNER?",
+  "¿CUANTO TIEMPO DE RELACION?": "HOW LONG HAVE YOU BEEN IN THIS RELATIONSHIP?",
+
+  // VG block
+  "¿Le ha agredido físicamente en otra ocasión?": "HAS HE PHYSICALLY ASSAULTED YOU BEFORE?",
+  "¿Le ha insultado, humillado o amenazado?": "HAS HE INSULTED, HUMILIATED OR THREATENED YOU?",
+  "¿Le controla el teléfono, redes sociales o amistades?": "DOES HE CONTROL YOUR PHONE, SOCIAL MEDIA OR FRIENDSHIPS?",
+  "¿Le impide trabajar, estudiar o relacionarse?": "DOES HE PREVENT YOU FROM WORKING, STUDYING OR SOCIALIZING?",
+  "¿Le obliga o ha obligado a mantener relaciones sexuales?": "HAS HE FORCED YOU TO HAVE SEXUAL RELATIONS?",
+  "¿Ha destruido objetos o amenazado con hacerlo?": "HAS HE DESTROYED OBJECTS OR THREATENED TO?",
+  "¿Le ha dicho que la va a matar?": "HAS HE SAID HE WILL KILL YOU?",
+  "¿Ha amenazado con suicidarse si usted lo deja?": "HAS HE THREATENED SUICIDE IF YOU LEAVE?",
+  "¿Tiene acceso a armas, cuchillos u objetos peligrosos?": "DOES HE HAVE ACCESS TO WEAPONS/KNIVES/DANGEROUS OBJECTS?",
+  "¿Consume alcohol o drogas de forma habitual?": "DOES HE REGULARLY USE ALCOHOL OR DRUGS?",
+  "Describe qué tipo de sustancias y habitualidad": "DESCRIBE SUBSTANCES AND FREQUENCY",
+  "¿Se vuelve más violento cuando consume?": "DOES HE BECOME MORE VIOLENT WHEN USING?",
+  "¿Los episodios han aumentado en frecuencia o gravedad?": "HAVE EPISODES INCREASED IN FREQUENCY OR SEVERITY?",
+  "¿La violencia comenzó hace poco o lleva tiempo ocurriendo?": "DID VIOLENCE START RECENTLY OR HAS IT BEEN GOING ON FOR A WHILE?",
+  "¿Ha intentado usted separarse anteriormente?": "HAVE YOU TRIED TO LEAVE BEFORE?",
+  "¿Qué ocurrió cuando lo intentó?": "WHAT HAPPENED WHEN YOU TRIED?",
+  "¿Hay menores que presencien los hechos?": "ARE THERE MINORS WHO WITNESS THE INCIDENTS?",
+  "¿Ha agredido o amenazado alguna vez a los menores?": "HAS HE EVER ASSAULTED OR THREATENED THE MINORS?",
+  "¿Cree que los menores están en peligro?": "DO YOU BELIEVE THE MINORS ARE AT RISK?",
+  "¿Ha denunciado anteriormente estos hechos?": "HAVE YOU REPORTED THESE FACTS BEFORE?",
+  "¿Tiene o ha tenido orden de protección?": "DO YOU HAVE / HAVE YOU HAD A PROTECTION ORDER?",
+  "¿Sobre el autor?": "AGAINST THE OFFENDER?",
+  "¿DESEA SOLICITAR ORDEN DE PROTECCIÓN?": "DO YOU WANT TO REQUEST A PROTECTION ORDER?",
+  "¿Está siendo atendida por servicios sociales o sanitarios?": "ARE YOU BEING ASSISTED BY SOCIAL OR HEALTH SERVICES?",
+  "¿Alguna persona de su entorno conoce la situación?": "DOES ANYONE AROUND YOU KNOW ABOUT THIS?",
+  "¿Depende usted económicamente de él?": "ARE YOU FINANCIALLY DEPENDENT ON HIM?",
+  "¿Cree usted que la situación puede empeorar?": "DO YOU THINK THE SITUATION MAY WORSEN?",
+  "¿Tiene miedo real por su vida?": "ARE YOU GENUINELY AFRAID FOR YOUR LIFE?",
+
+  // VD block
+  "¿HECHOS EN PRESENCIA DE MENORES?": "INCIDENTS IN THE PRESENCE OF MINORS?",
+  "¿HECHOS EN DOMICILIO FAMILIAR?": "INCIDENTS AT THE FAMILY HOME?",
+  "¿HECHOS ANTERIORES SIMILARES?": "SIMILAR PREVIOUS INCIDENTS?",
+
+  // ===== AMENAZAS_GLOBAL =====
+  "VÍNCULO CON EL AUTOR": "RELATIONSHIP TO THE OFFENDER",
+  "AUTOR VARÓN Y PAREJA (O SIMILAR AFECTIVIDAD EN EL PRESENTE O PASADO) - V. GÉNERO":
+    "MALE OFFENDER AND PARTNER (OR SIMILAR, CURRENT/PAST) - GENDER VIOLENCE",
+  "AUTOR/A DEL ENTORNO FAMILIAR - V. DOMÉSTICA": "FAMILY MEMBER OFFENDER - DOMESTIC VIOLENCE",
+  "OTRO": "OTHER",
+  "NOMBRE Y/O RELACIÓN QUE LE UNE": "NAME AND/OR RELATIONSHIP",
+  "RELACIÓN QUE LE UNE AL AUTOR/A": "RELATIONSHIP DETAILS",
+  "¿CUÁLES FUERON LAS AMENAZAS?": "WHAT WERE THE THREATS?",
+  "DESCRIPCIÓN DEL AUTOR": "DESCRIPTION OF OFFENDER",
+
+  // ===== CARACTER_SEXUAL =====
+  "AÑADA DATOS DEL AUTOR": "ADD OFFENDER DETAILS",
+  "DESCRIPCIÓN DEL AUTOR": "DESCRIPTION OF OFFENDER",
+
+  // ===== OTROS =====
+  "BREVE RESUMEN DE LOS HECHOS": "BRIEF SUMMARY",
+
+  // ===== OBJETOS MODAL =====
+  "AÑADIR / EDITAR OBJETOS": "ADD / EDIT ITEMS",
+  "Sin objetos.": "No items.",
+  "X": "X",
+
+  // ===== VALIDACIÓN =====
+  "Selecciona una NACIONALIDAD válida (usa las píldoras).":
+    "Select a valid NATIONALITY (use the pills).",
+  "Selecciona un PAÍS de nacimiento válido (usa las píldoras).":
+    "Select a valid COUNTRY OF BIRTH (use the pills).",
+  "Si el país de nacimiento es ESPAÑA, selecciona PROVINCIA y MUNICIPIO.":
+    "If the country of birth is SPAIN, select PROVINCE and MUNICIPALITY."
+};
+function trUI(s){
+  const k = String(s||"");
+  if (UI_EN[k]) return UI_EN[k];                    // textos UI
+  const ku = normUp(k);
+  return (window.COUNTRIES_EN && window.COUNTRIES_EN[ku]) ? window.COUNTRIES_EN[ku] : k; // países
+}
+
+
+
+function getAllPaises(){
+  const out = [];
+  const P = (window.PAISES || null);
+  if (!P) return out;
+  if (Array.isArray(P.featured)) out.push(...P.featured);
+  if (Array.isArray(P.groups)){
+    for (const g of P.groups){
+      if (g && Array.isArray(g.items)) out.push(...g.items);
+    }
+  }
+  const seen = new Set();
+  return out.map(normUp).filter(x=>x && !seen.has(x) && (seen.add(x), true));
+}
+const __PAISES_ALL = getAllPaises();
+const __PAISES_SET = new Set(__PAISES_ALL);
+
+function renderPillsFor(inputEl, hostEl, onPick){
+  if (!inputEl || !hostEl) return;
+  const paint = ()=>{
+    const q = normUp(inputEl.value);
+    hostEl.innerHTML = "";
+    if (!q) return; // SIN píldoras rápidas: solo al escribir
+
+    const list = __PAISES_ALL.filter(p=>p.includes(q)).slice(0, 18);
+
+    for (const opt of list){
+      if (opt === "DESCONOCIDO") continue;
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "choiceBtn";
+      b.textContent = trUI(opt);
+      b.dataset.value = opt;
+      b.classList.toggle("isPicked", normUp(inputEl.value) === opt);
+      b.addEventListener("click", ()=>{
+        inputEl.value = opt;
+        if (onPick) onPick(opt);
+        paint();
+      });
+      hostEl.appendChild(b);
+    }
+  };
+  inputEl.addEventListener("input", paint);
+  inputEl.addEventListener("blur", ()=>{
+    const v = normUp(inputEl.value);
+    if (v && __PAISES_SET.has(v)) inputEl.value = v;
+  });
+  paint();
+}
+
+function fillProvincias(sel){
+  const el = (typeof sel === "string") ? $(sel) : sel;
+  if (!el) return;
+  el.innerHTML = `<option value=""></option>`;
+  const arr = Array.isArray(window.PROVINCIAS_ES) ? window.PROVINCIAS_ES : [];
+  for (const p of arr){
+    const o = document.createElement("option");
+    o.value = p; o.textContent = p;
+    el.appendChild(o);
+  }
+}
+
+function fillMunicipios(prov, sel){
+  const el = (typeof sel === "string") ? $(sel) : sel;
+  if (!el) return;
+  el.innerHTML = `<option value=""></option>`;
+  const M0 = (window.MUNICIPIOS_ES && typeof window.MUNICIPIOS_ES === "object") ? window.MUNICIPIOS_ES
+           : (window.MUNICIPIOS && typeof window.MUNICIPIOS === "object") ? window.MUNICIPIOS
+           : {};
+  const arr = Array.isArray(M0[prov]) ? M0[prov] : [];
+  for (const m of arr){
+    const o = document.createElement("option");
+    o.value = m; o.textContent = m;
+    el.appendChild(o);
+  }
+}
+
+function computeLugarNacimiento(){
+  const pais = normUp($("fNacPais")?.value);
+  const hid = $("fNacLugar");
+  const outProv = $("fNacProvOut");
+  const outMun = $("fNacMunOut");
+  if (!hid || !outProv || !outMun) return;
+
+  outProv.value = "";
+  outMun.value = "";
+
+  if (!pais){ hid.value = ""; return; }
+
+  if (pais !== "ESPAÑA"){
+    hid.value = pais;
+    return;
+  }
+
+  const prov = ($("fNacProv")?.value||"").trim();
+  const mun  = ($("fNacMun")?.value||"").trim();
+
+  if (prov) outProv.value = prov;
+  if (mun) outMun.value = mun;
+
+  if (prov && mun){
+    hid.value = (prov === mun) ? `${mun}` : `${mun}, ${prov}`;
+    if (prov === mun) outProv.value = ""; // “Madrid, Madrid” -> no repitas
+    return;
+  }
+  hid.value = mun || prov || "ESPAÑA";
+}
+
+function toggleNacEsUI(){
+  const pais = normUp($("fNacPais")?.value);
+  const box = $("nacEsBox");
+  if (!box) return;
+  const isEs = (pais === "ESPAÑA");
+  box.style.display = isEs ? "grid" : "none";
+  if (isEs){
+    fillProvincias("fNacProv");
+    const prov = ($("fNacProv")?.value||"").trim();
+    if (prov) fillMunicipios(prov, "fNacMun");
+  }
+  computeLugarNacimiento();
+}
+
+function renderNacPills(){
+  renderPillsFor($("fNac"), $("nacPills"));                 // Nacionalidad
+  renderPillsFor($("fNacPais"), $("nacPaisPills"), ()=>{    // País nacimiento
+    toggleNacEsUI();
+  });
+
+  $("fNacPais")?.addEventListener("input", toggleNacEsUI);
+  $("fNacPais")?.addEventListener("blur", toggleNacEsUI);
+
+  $("fNacProv")?.addEventListener("change", ()=>{
+    const prov = ($("fNacProv")?.value||"").trim();
+    fillMunicipios(prov, "fNacMun");
+    computeLugarNacimiento();
+  });
+  $("fNacMun")?.addEventListener("change", computeLugarNacimiento);
+
+  // Domicilio: país + prov/mun si ES + dirección libre
+  renderPillsFor($("fDomPais"), $("domPaisPills"), ()=>{ toggleDomEsUI(); });
+  $("fDomPais")?.addEventListener("input", toggleDomEsUI);
+  $("fDomPais")?.addEventListener("blur", toggleDomEsUI);
+  $("fDomProv")?.addEventListener("change", ()=>{
+    const prov = ($("fDomProv")?.value||"").trim();
+    fillMunicipios(prov, "fDomMun");
+  });
+}
+function computeDomicilio(){
+  const pais = normUp($("fDomPais")?.value);
+  const dir  = ($("fDomDir")?.value||"").trim();
+
+  if (!pais){
+    return dir; // si no hay país, al menos deja la dirección
+  }
+
+  if (pais !== "ESPAÑA"){
+    // "Direccion, Pais"
+    return [dir, pais].filter(Boolean).join(", ");
+  }
+
+  const prov = ($("fDomProv")?.value||"").trim();
+  const mun  = ($("fDomMun")?.value||"").trim();
+
+  // "Direccion, Municipio, Provincia"
+  const parts = [];
+  if (dir) parts.push(dir);
+  if (mun) parts.push(mun);
+  if (prov) parts.push(prov);
+  return parts.join(", ");
+}
+
+function toggleDomEsUI(){
+  const pais = normUp($("fDomPais")?.value);
+  const box = $("domEsBox");
+  if (!box) return;
+  const isEs = (pais === "ESPAÑA");
+  box.style.display = isEs ? "grid" : "none";
+  if (isEs){
+    fillProvincias("fDomProv");
+    const prov = ($("fDomProv")?.value||"").trim();
+    if (prov) fillMunicipios(prov, "fDomMun");
+  }
+}
+// =============================
+
+const GLOBAL_ROUTES = {
+  // Entrada principal
+  ENTRY: {
+    "SUSTRACCIÓN": "SUSTRACCION_SELECTOR",
+    "DAÑOS": "DANOS",
+    "AGRESIÓN": "AGRESION_SELECTOR",
+    "AMENAZAS": "AMENAZAS_GLOBAL",
+    "CARÁCTER SEXUAL": "CARACTER_SEXUAL",
+    "OTROS": "OTROS"
+  },
+
+  // Sustracción
+  SUSTRACCION_SELECTOR: {
+    "A LA PERSONA": "HURTO_RVI",
+    "EN COMERCIO (HORARIO LABORAL)": "PATRIMONIO",
+    "EN DOMICILIO / ESTABLECIMIENTO": "ROBO_FUERZA"
+  },
+
+  // Agresión
+  AGRESION_SELECTOR: {
+    "ENTORNO FAMILIAR / AFECTIVO": "AGRESION_FAMILIAR_AFECTIVO",
+    "OTRO (NO FAMILIAR)": "LESIONES"
+  }
+};
+
+const QUESTION_SETS = {
+  // =============================
+  // ENTRADA GLOBAL
+  // =============================
+   "EXPORT_KEY_MAP": {
+    "caracteristica_hecho": "hecho_caracteristicas",
+
+    "sustraccion_donde": "sustraccion_donde",
+
+    "calidad_denunciante": "denunciante_calidad",
+    "conocimiento_hecho": "hecho_conocimiento",
+
+    "fhl": "hecho_fecha_hora_lugar",
+    "fecha": "hecho_fecha",
+    "hora": "hecho_hora",
+    "hora_desde": "hecho_hora_desde",
+    "hora_hasta": "hecho_hora_hasta",
+    "lugar": "hecho_lugar",
+
+    "interaccion_autor": "autor_interaccion",
+    "tipo_intimidacion": "autor_intimidacion_tipo",
+
+    "lesiones": "lesiones_presenta",
+    "tiene_lesiones": "lesiones_presenta",
+    "descripcion_lesiones": "lesiones_descripcion",
+    "parte_medico": "lesiones_parte_medico",
+    "informe_medico": "lesiones_informe_medico",
+
+    "descripcion_danos": "danos_descripcion",
+    "danos": "danos_hay",
+    "danos_descripcion": "danos_descripcion",
+    "presupuesto_reparacion": "danos_aporta_presupuesto",
+    "danos_valoracion": "danos_valoracion_eur",
+
+    "metodo_acceso": "acceso_metodo",
+    "ha_manipulado_lugar": "hecho_manipulacion_lugar",
+
+    "sustraccion": "sustraccion_hay",
+    "objetos": "sustraccion_objetos",
+
+    "camaras": "camaras_hay",
+    "camaras_detalle": "camaras_gestion_detalle",
+
+    "autor_retenido": "autor_retenido_en_lugar",
+
+    "conoce_autor": "autor_conocido",
+    "datos_autor": "autor_datos",
+    "descripcion_autor": "autor_descripcion",
+    "descripcion_autores": "autores_descripcion",
+
+    "resumen": "hecho_resumen",
+
+    "agresion_tipo": "agresion_tipo",
+
+    "condicion": "declarante_condicion",
+    "tipo_afectividad": "afectividad_tipo",
+    "hay_convivencia": "convivencia_hay",
+    "es_pareja_actual": "pareja_es_actual",
+    "tiempo_relacion": "pareja_tiempo_relacion",
+
+    "vinculo_autor": "autor_vinculo",
+    "quien_es": "autor_nombre_relacion",
+    "relacion_autor": "autor_relacion_detalle",
+
+    "vg_p9":  "vg_agresion_fisica_previa",
+    "vg_p10": "vg_insultos_humillacion_amenazas",
+    "vg_p11": "vg_control_telefono_redes_amistades",
+    "vg_p12": "vg_impide_trabajar_estudiar_relacionarse",
+    "vg_p13": "vg_obliga_relaciones_sexuales",
+    "vg_p14": "vg_destruye_objetos_o_amenaza",
+    "vg_p15": "vg_amenaza_muerte",
+    "vg_p16": "vg_amenaza_suicidio_si_deja",
+    "vg_p17": "vg_acceso_armas_objetos_peligrosos",
+    "vg_p18": "vg_consumo_alcohol_drogas_habitual",
+    "vg_p18_det": "vg_consumo_detalle",
+    "vg_p19": "vg_mas_violento_con_consumo",
+    "vg_p20": "vg_aumento_frecuencia_gravedad",
+    "vg_p21": "vg_comienzo_violencia",
+    "vg_p22": "vg_intento_separacion_previo",
+    "vg_p23": "vg_que_ocurrio_tras_intento",
+    "vg_p24": "vg_menores_presencian",
+    "vg_p25": "vg_agresion_amenaza_a_menores",
+    "vg_p26": "vg_menores_en_peligro",
+    "vg_p27": "vg_denuncias_previas",
+    "vg_p28": "vg_orden_proteccion_tuvo",
+    "vg_p28b": "vg_orden_proteccion_sobre_autor",
+    "vg_p28_solicita": "vg_solicita_orden_proteccion",
+    "vg_p29": "vg_atencion_servicios_sociales_sanitarios",
+    "vg_p30a": "vg_entorno_conoce_situacion",
+    "vg_p30b": "vg_dependencia_economica",
+    "vg_p31": "vg_puede_empeorar",
+    "vg_p32": "vg_miedo_real_vida",
+
+    "vd_menores": "vd_menores_presencian",
+    "vd_domicilio": "vd_en_domicilio_familiar",
+    "vd_anteriores": "vd_anteriores_similares"
+  },
+
+  "GLOBAL": [
+    {
+      key: "caracteristica_hecho",
+      title: "CARACTERÍSTICAS DEL HECHO",
+      type: "select",
+      options: [
+        "SUSTRACCIÓN",
+        "DAÑOS",
+        "AGRESIÓN",
+        "AMENAZAS",
+        "CARÁCTER SEXUAL",
+        "OTROS"
+      ]
+    }
+  ],
+
+  // =============================
+  // SUSTRACCIÓN: selector (persona / comercio / inmueble)
+  // =============================
+  "SUSTRACCION_SELECTOR": [
+    {
+      key: "sustraccion_donde",
+      title: "¿DÓNDE SE PRODUCE LA SUSTRACCIÓN?",
+      type: "select",
+      options: [
+        "A LA PERSONA",
+        "EN COMERCIO (HORARIO LABORAL)",
+        "EN DOMICILIO / ESTABLECIMIENTO"
+      ]
+    }
+  ],
+
+  // =============================
+  // TRANSCRIPCIÓN EXACTA DE TUS ARCHIVOS (SIN TOCAR)
+  // =============================
+
+  // hurto_rvi.html
+  "HURTO_RVI": [
+    {
+      key: "calidad_denunciante",
+      title: "DENUNCIA EN CALIDAD DE...",
+      type: "select",
+      options: ["PERJUDICADO", "TESTIGO"]
+    },
+
+    {
+      key: "fhl",
+      title: "FECHA, HORA Y LUGAR DEL HECHO",
+      type: "fhl",
+      placeholderLugar: "Calle / establecimiento / municipio"
+    },
+
+    {
+      key: "interaccion_autor",
+      title: "¿INTERACCIÓN CON EL AUTOR?",
+      type: "select",
+      options: [
+        "NO",
+        "SI, COMUNICACION / ACERCAMIENTO",
+        "SI, FORCEJEO O AGRESION",
+        "SI, INTIMIDACION SIN CONTACTO"
+      ],
+      when: (st) => st.calidad_denunciante === "PERJUDICADO"
+    },
+
+    {
+      key: "lesiones",
+      title: "¿PRESENTA LESIONES?",
+      type: "select",
+      options: ["NO", "SI"],
+      when: (st) =>
+        st.calidad_denunciante === "PERJUDICADO" &&
+        st.interaccion_autor === "SI, FORCEJEO O AGRESION"
+    },
+
+    {
+      key: "descripcion_lesiones",
+      title: "DESCRIBA BREVEMENTE LAS LESIONES",
+      type: "text",
+      when: (st) =>
+        st.calidad_denunciante === "PERJUDICADO" &&
+        st.interaccion_autor === "SI, FORCEJEO O AGRESION" &&
+        st.lesiones === "SI"
+    },
+
+    {
+      key: "parte_medico",
+      title: "¿APORTA PARTE MÉDICO?",
+      type: "select",
+      options: ["NO", "SI"],
+      when: (st) =>
+        st.calidad_denunciante === "PERJUDICADO" &&
+        st.interaccion_autor === "SI, FORCEJEO O AGRESION" &&
+        st.lesiones === "SI"
+    },
+
+    {
+      key: "tipo_intimidacion",
+      title: "TIPO DE INTIMIDACIÓN",
+      type: "text",
+      when: (st) =>
+        st.interaccion_autor === "SI, INTIMIDACION SIN CONTACTO"
+    },
+
+    {
+      key: "objetos",
+      title: "OBJETOS SUSTRAÍDOS",
+      type: "objects",
+      when: (st) =>
+        st.calidad_denunciante === "PERJUDICADO"
+    },
+
+    {
+      key: "descripcion_autor",
+      title: "DESCRIPCIÓN FÍSICA DEL AUTOR/ES",
+      type: "text"
+    },
+
+    {
+      key: "resumen",
+      title: "RESUMEN DE LOS HECHOS",
+      type: "textarea",
+      max: 900
+    }
+  ],
+
+  // denunciante_patrimonio.html
+  "PATRIMONIO": [
+    { key:"calidad_denunciante", title:"DENUNCIA EN CALIDAD DE...", type:"select", options:[
+      "PERJUDICADO",
+      "REPRESENTANTE LEGAL",
+      "EMPLEADO DE COMERCIO AFECTADO"
+    ]},
+    { key:"conocimiento_hecho", title:"¿COMO TIENE CONOCIMIENTO DEL HECHO?", type:"select", options:[
+      "TESTIGO DIRECTO",
+      "POR TERCERAS PERSONAS",
+      "CAMARAS DE SEGURIDAD",
+      "TRAS COMPROBAR PROPIEDAD FALTANTE"
+    ]},
+    { key:"fhl", title:"FECHA, HORA Y LUGAR DEL HECHO", type:"fhl", placeholderLugar:"Calle / establecimiento / municipio" },
+    { key:"interaccion_autor", title:"¿INTERACCION CON EL AUTOR?", type:"select", options:[
+      "NO",
+      "SI, COMUNICACION",
+      "SI, FORCEJEO O AGRESION"
+    ]},
+    { key:"lesiones", title:"¿PRESENTA LESIONES?", type:"select", options:["NO","SI"],
+      when:(st)=> (st.interaccion_autor === "SI, FORCEJEO O AGRESION")
+    },
+    { key:"parte_medico", title:"¿APORTA INFORME MEDICO?", type:"select", options:["NO","SI"],
+      when:(st)=> (st.interaccion_autor === "SI, FORCEJEO O AGRESION" && st.lesiones === "SI")
+    },
+    { key:"autor_retenido", title:"¿AUTOR RETENIDO EN EL LUGAR?", type:"select", options:["SI","NO"] },
+    { key:"camaras", title:"¿HAY CAMARAS DE SEGURIDAD?", type:"select", options:[
+      "NO",
+      "SI, LAS APORTA EN ESTE ACTO",
+      "SI, LAS APORTARÁ EN SEDE JUDICIAL",
+      "SI, FACILITA CONTACTO PARA SU GESTION"
+    ]},
+    { key:"camaras_detalle", title:"GESTION DE GRABACIONES", type:"text", placeholder:"Establecimiento, contacto, ubicación, horario...",
+      when:(st)=> (st.camaras === "SI, FACILITA CONTACTO PARA SU GESTION")
+    },
+    { key:"objetos", title:"OBJETOS SUSTRAIDOS", type:"objects" },
+    { key:"resumen", title:"BREVE RESUMEN DE LOS HECHOS", type:"textarea", max:900 }
+  ],
+
+  // robo_fuerza.html
+  "ROBO_FUERZA": [
+    { key:"calidad_denunciante", title:"DENUNCIA EN CALIDAD DE...", type:"select", options:[
+      "PERJUDICADO",
+      "TESTIGO"
+    ]},
+
+    // Solo si NO es testigo: cómo tiene conocimiento (si es testigo se entiende que lo vio)
+    { key:"conocimiento_hecho", title:"¿CÓMO TIENE CONOCIMIENTO DEL HECHO?", type:"select", options:[
+      "A TRAVÉS DE LA POLICÍA",
+      "EMPRESA DE SEGURIDAD",
+      "POR TERCERAS PERSONAS",
+      "DESCUBRIMIENTO POSTERIOR AL HECHO",
+      "TESTIGO DE LOS HECHOS"
+    ],
+      when:(st)=> (st.calidad_denunciante !== "TESTIGO")
+    },
+
+    { key:"fhl", title:"FECHA, INTERVALO HORARIO Y LUGAR DEL HECHO", type:"fhl", placeholderLugar:"Domicilio / establecimiento / municipio", interval:true },
+
+    { key:"metodo_acceso", title:"MÉTODO DE ACCESO (BREVE)", type:"text", placeholder:"Puerta forzada, ventana, escalo, rotura cerradura, ganzúa..." },
+
+    // PERJUDICADO: daños y presupuesto
+    { key:"danos", title:"¿SE PRODUJERON DAÑOS?", type:"select", options:["NO","SI"],
+      when:(st)=> (st.calidad_denunciante === "PERJUDICADO")
+    },
+    { key:"presupuesto_reparacion", title:"¿APORTA PRESUPUESTO DE REPARACIÓN?", type:"select", options:["NO","SI"],
+      when:(st)=> (st.calidad_denunciante === "PERJUDICADO" && st.danos === "SI")
+    },
+    { key:"danos_descripcion", title:"DESCRIPCIÓN DE LOS DAÑOS", type:"text", placeholder:"Describe brevemente los daños producidos...",
+      when:(st)=> (st.calidad_denunciante === "PERJUDICADO" && st.danos === "SI")
+    },
+    { key:"danos_valoracion", title:"VALORACIÓN / PRESUPUESTO DE REPARACIÓN", type:"text", placeholder:"Importe, empresa, nº presupuesto, fecha...",
+      when:(st)=> (st.calidad_denunciante === "PERJUDICADO" && st.danos === "SI" && st.presupuesto_reparacion === "SI")
+    },
+
+    // PERJUDICADO: manipulación del lugar
+    { key:"ha_manipulado_lugar", title:"¿HA MANIPULADO EL LUGAR DE LOS HECHOS? (PARA CONOCIMIENTO DE LA BRIGADA DE POLICÍA CIENTÍFICA)", type:"select", options:["NO","SI"],
+      when:(st)=> (st.calidad_denunciante === "PERJUDICADO")
+    },
+
+    // PERJUDICADO: sustracción y objetos solo si SI
+    { key:"sustraccion", title:"¿SE HA PRODUCIDO SUSTRACCIÓN?", type:"select", options:["NO","SI"],
+      when:(st)=> (st.calidad_denunciante === "PERJUDICADO")
+    },
+    { key:"objetos", title:"OBJETOS SUSTRAÍDOS", type:"objects",
+      when:(st)=> (st.calidad_denunciante === "PERJUDICADO" && st.sustraccion === "SI")
+    },
+
+    // PERJUDICADO: cámaras de seguridad
+    { key:"camaras", title:"¿HAY CAMARAS DE SEGURIDAD?", type:"select", options:[
+      "NO",
+      "SI, LAS APORTA EN ESTE ACTO",
+      "SI, LAS APORTARÁ EN SEDE JUDICIAL",
+      "SI, FACILITA CONTACTO PARA SU GESTION"
+    ],
+      when:(st)=> (st.calidad_denunciante === "PERJUDICADO")
+    },
+    { key:"camaras_detalle", title:"GESTION DE GRABACIONES", type:"text", placeholder:"Establecimiento, contacto, ubicación, horario...",
+      when:(st)=> (st.calidad_denunciante === "PERJUDICADO" && st.camaras === "SI, FACILITA CONTACTO PARA SU GESTION")
+    },
+
+    // Autores: siempre para TESTIGO y también si el PERJUDICADO fue testigo de los hechos
+    { key:"descripcion_autores", title:"BREVE DESCRIPCIÓN FÍSICA DE LOS AUTORES", type:"text", placeholder:"Rasgos, ropa, edad aprox., altura, tatuajes...",
+      when:(st)=> (st.calidad_denunciante === "TESTIGO" || (st.conocimiento_hecho === "TESTIGO DE LOS HECHOS"))
+    },
+
+    { key:"resumen", title:"BREVE RESUMEN DE LOS HECHOS", type:"textarea", max:900 }
+  ],
+
+  // danos.html
+  "DANOS": [
+    { key:"calidad_denunciante", title:"DENUNCIA EN CALIDAD DE...", type:"select", options:[
+      "PERJUDICADO",
+      "TESTIGO"
+    ]},
+
+    // Solo si NO es testigo: cómo tiene conocimiento (si es testigo se entiende que lo vio)
+    { key:"conocimiento_hecho", title:"¿CÓMO TIENE CONOCIMIENTO DEL HECHO?", type:"select", options:[
+      "A TRAVÉS DE LA POLICÍA",
+      "POR TERCERAS PERSONAS",
+      "DESCUBRIMIENTO POSTERIOR AL HECHO",
+      "TESTIGO DE LOS HECHOS"
+    ],
+      when:(st)=> (st.calidad_denunciante !== "TESTIGO")
+    },
+
+    { key:"fhl", title:"FECHA, INTERVALO HORARIO Y LUGAR DEL HECHO", type:"fhl", placeholderLugar:"Domicilio / establecimiento / municipio", interval:true },
+
+    // En DAÑOS es obvio que hay daños: pedimos descripción directamente (solo PERJUDICADO)
+    { key:"descripcion_danos", title:"DESCRIPCIÓN DE LOS DAÑOS", type:"text", placeholder:"Describe brevemente los daños producidos...",
+      when:(st)=> (st.calidad_denunciante === "PERJUDICADO")
+    },
+
+    // Presupuesto y valoración (solo PERJUDICADO)
+    { key:"presupuesto_reparacion", title:"¿APORTA PRESUPUESTO DE REPARACIÓN?", type:"select", options:["NO","SI"],
+      when:(st)=> (st.calidad_denunciante === "PERJUDICADO")
+    },
+    { key:"danos_valoracion", title:"VALORACIÓN / PRESUPUESTO DE REPARACIÓN", type:"text", placeholder:"Importe, empresa, nº presupuesto, fecha...",
+      when:(st)=> (st.calidad_denunciante === "PERJUDICADO" && st.presupuesto_reparacion === "SI")
+    },
+
+    // Autores: siempre para TESTIGO y también si el PERJUDICADO fue testigo de los hechos
+    { key:"descripcion_autores", title:"BREVE DESCRIPCIÓN FÍSICA DE LOS AUTORES", type:"text", placeholder:"Rasgos, ropa, edad aprox., altura, tatuajes...",
+      when:(st)=> (st.calidad_denunciante === "TESTIGO" || (st.conocimiento_hecho === "TESTIGO DE LOS HECHOS"))
+    },
+
+    { key:"resumen", title:"BREVE RESUMEN DE LOS HECHOS", type:"textarea", max:900 }
+  ],
+
+  // lesiones.html
+  "LESIONES": [
+    { key:"calidad_denunciante", title:"DENUNCIA EN CALIDAD DE...", type:"select", options:[
+      "PERJUDICADO",
+      "TESTIGO"
+    ]},
+
+    { key:"fhl", title:"FECHA, HORA Y LUGAR DEL HECHO", type:"fhl", placeholderLugar:"Calle / zona / municipio" },
+
+    // Si es TESTIGO, NO puede valorar lesiones: se omite todo lo de lesiones/parte.
+    { key:"lesiones", title:"¿PRESENTA LESIONES?", type:"select", options:["NO","SI"],
+      when:(st)=> (st.calidad_denunciante !== "TESTIGO")
+    },
+
+    { key:"descripcion_lesiones", title:"DESCRIPCION DE LESIONES", type:"textarea", max:900,
+      when:(st)=> (st.calidad_denunciante !== "TESTIGO" && st.lesiones === "SI")
+    },
+
+    { key:"parte_medico", title:"¿APORTA PARTE MEDICO?", type:"select", options:["NO","SI"],
+      when:(st)=> (st.calidad_denunciante !== "TESTIGO" && st.lesiones === "SI")
+    },
+
+    // === Identificación del autor en agresión no familiar ===
+    // PERJUDICADO: primero si conoce autor
+   { key:"conoce_autor", title:"¿CONOCE AL AUTOR DE LOS HECHOS?", type:"select", options:["SI","NO"] },
+
+{ key:"datos_autor", title:"APORTE DATOS", type:"text",
+  when:(st)=> (st.conoce_autor === "SI")
+},
+
+{ key:"descripcion_autor", title:"DESCRIPCIÓN DEL AUTOR/ES", type:"textarea", max:900,
+  when:(st)=> (st.conoce_autor === "NO" || !st.conoce_autor)
+},
+
+    { key:"resumen", title:"BREVE RESUMEN DE LOS HECHOS", type:"textarea", max:900 }
+  ],
+
+  // =============================
+  // AGRESIÓN: selector
+  // =============================
+  "AGRESION_SELECTOR": [
+    {
+      key: "agresion_tipo",
+      title: "TIPO DE AGRESIÓN",
+      type: "select",
+      options: [
+        "ENTORNO FAMILIAR / AFECTIVO",
+        "OTRO (NO FAMILIAR)"
+      ]
+    }
+  ],
+
+  // =============================
+  // AGRESIÓN: familiar/afectivo (lo tuyo)
+  // =============================
+  "AGRESION_FAMILIAR_AFECTIVO": [
+    { key:"condicion", title:"DENUNCIA EN CALIDAD DE...", type:"select", options:["VICTIMA","TESTIGO"] },
+
+    { key:"tipo_afectividad", title:"TIPO DE AFECTIVIDAD", type:"select", options:[
+      "AGRESIÓN DE PAREJA (HOMBRE A MUJER) - V. GÉNERO",
+      "RESTO DE CASOS - V. DOMÉSTICA"
+    ]},
+
+    { key:"fhl", title:"FECHA, HORA Y LUGAR DEL HECHO", type:"fhl", placeholderLugar:"Calle / zona / municipio" },
+
+    // VÍCTIMA: convivencia/relación/lesiones
+    { key:"hay_convivencia", title:"¿HAY CONVIVENCIA?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.condicion === "VICTIMA")
+    },
+    { key:"tiene_lesiones", title:"¿TIENE LESIONES?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.condicion === "VICTIMA")
+    },
+    { key:"descripcion_lesiones", title:"DESCRIBA LAS LESIONES", type:"textarea", max:900,
+      when:(st)=> (st.condicion === "VICTIMA" && st.tiene_lesiones === "SI")
+    },
+    { key:"informe_medico", title:"¿APORTA INFORME MEDICO?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.condicion === "VICTIMA" && st.tiene_lesiones === "SI")
+    },
+
+    // SOLO V.GÉNERO (solo víctima)
+    { key:"es_pareja_actual", title:"¿ES SU PAREJA ACTUAL?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.condicion === "VICTIMA" && st.tipo_afectividad === "AGRESIÓN DE PAREJA (HOMBRE A MUJER) - V. GÉNERO")
+    },
+    { key:"tiempo_relacion", title:"¿CUANTO TIEMPO DE RELACION?", type:"text",
+      when:(st)=> (st.condicion === "VICTIMA" && st.tipo_afectividad === "AGRESIÓN DE PAREJA (HOMBRE A MUJER) - V. GÉNERO" && st.es_pareja_actual === "SI")
+    },
+
+    // Cuestionario V.G. (solo víctima y solo si NO es pareja actual)
+    { key:"vg_p9",  title:"¿Le ha agredido físicamente en otra ocasión?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.condicion === "VICTIMA" && st.tipo_afectividad === "AGRESIÓN DE PAREJA (HOMBRE A MUJER) - V. GÉNERO")
+    },
+    { key:"vg_p10", title:"¿Le ha insultado, humillado o amenazado?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.condicion === "VICTIMA" && st.tipo_afectividad === "AGRESIÓN DE PAREJA (HOMBRE A MUJER) - V. GÉNERO")
+    },
+    { key:"vg_p11", title:"¿Le controla el teléfono, redes sociales o amistades?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.condicion === "VICTIMA" && st.tipo_afectividad === "AGRESIÓN DE PAREJA (HOMBRE A MUJER) - V. GÉNERO")
+    },
+    { key:"vg_p12", title:"¿Le impide trabajar, estudiar o relacionarse?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.condicion === "VICTIMA" && st.tipo_afectividad === "AGRESIÓN DE PAREJA (HOMBRE A MUJER) - V. GÉNERO")
+    },
+    { key:"vg_p13", title:"¿Le obliga o ha obligado a mantener relaciones sexuales?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.condicion === "VICTIMA" && st.tipo_afectividad === "AGRESIÓN DE PAREJA (HOMBRE A MUJER) - V. GÉNERO")
+    },
+    { key:"vg_p14", title:"¿Ha destruido objetos o amenazado con hacerlo?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.condicion === "VICTIMA" && st.tipo_afectividad === "AGRESIÓN DE PAREJA (HOMBRE A MUJER) - V. GÉNERO")
+    },
+    { key:"vg_p15", title:"¿Le ha dicho que la va a matar?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.condicion === "VICTIMA" && st.tipo_afectividad === "AGRESIÓN DE PAREJA (HOMBRE A MUJER) - V. GÉNERO")
+    },
+    { key:"vg_p16", title:"¿Ha amenazado con suicidarse si usted lo deja?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.condicion === "VICTIMA" && st.tipo_afectividad === "AGRESIÓN DE PAREJA (HOMBRE A MUJER) - V. GÉNERO")
+    },
+    { key:"vg_p17", title:"¿Tiene acceso a armas, cuchillos u objetos peligrosos?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.condicion === "VICTIMA" && st.tipo_afectividad === "AGRESIÓN DE PAREJA (HOMBRE A MUJER) - V. GÉNERO")
+    },
+    { key:"vg_p18", title:"¿Consume alcohol o drogas de forma habitual?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.condicion === "VICTIMA" && st.tipo_afectividad === "AGRESIÓN DE PAREJA (HOMBRE A MUJER) - V. GÉNERO")
+    },
+{ key:"vg_p18_det", title:"Describe qué tipo de sustancias y habitualidad", type:"text",
+      when:(st)=> (st.condicion === "VICTIMA" && st.tipo_afectividad === "AGRESIÓN DE PAREJA (HOMBRE A MUJER) - V. GÉNERO" && st.vg_p18 === "SI")
+    },
+    { key:"vg_p19", title:"¿Se vuelve más violento cuando consume?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.condicion === "VICTIMA" && st.tipo_afectividad === "AGRESIÓN DE PAREJA (HOMBRE A MUJER) - V. GÉNERO")
+    },
+    { key:"vg_p20", title:"¿Los episodios han aumentado en frecuencia o gravedad?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.condicion === "VICTIMA" && st.tipo_afectividad === "AGRESIÓN DE PAREJA (HOMBRE A MUJER) - V. GÉNERO")
+    },
+    { key:"vg_p21", title:"¿La violencia comenzó hace poco o lleva tiempo ocurriendo?", type:"text",
+      when:(st)=> (st.condicion === "VICTIMA" && st.tipo_afectividad === "AGRESIÓN DE PAREJA (HOMBRE A MUJER) - V. GÉNERO")
+    },
+    { key:"vg_p22", title:"¿Ha intentado usted separarse anteriormente?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.condicion === "VICTIMA" && st.tipo_afectividad === "AGRESIÓN DE PAREJA (HOMBRE A MUJER) - V. GÉNERO")
+    },
+    { key:"vg_p23", title:"¿Qué ocurrió cuando lo intentó?", type:"text",
+      when:(st)=> (st.condicion === "VICTIMA" && st.tipo_afectividad === "AGRESIÓN DE PAREJA (HOMBRE A MUJER) - V. GÉNERO" && st.vg_p22 === "SI")
+    },
+    { key:"vg_p24", title:"¿Hay menores que presencien los hechos?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.condicion === "VICTIMA" && st.tipo_afectividad === "AGRESIÓN DE PAREJA (HOMBRE A MUJER) - V. GÉNERO")
+    },
+    { key:"vg_p25", title:"¿Ha agredido o amenazado alguna vez a los menores?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.condicion === "VICTIMA" && st.tipo_afectividad === "AGRESIÓN DE PAREJA (HOMBRE A MUJER) - V. GÉNERO" && st.vg_p24 === "SI")
+    },
+    { key:"vg_p26", title:"¿Cree que los menores están en peligro?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.condicion === "VICTIMA" && st.tipo_afectividad === "AGRESIÓN DE PAREJA (HOMBRE A MUJER) - V. GÉNERO" && st.vg_p24 === "SI")
+    },
+    { key:"vg_p27", title:"¿Ha denunciado anteriormente estos hechos?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.condicion === "VICTIMA" && st.tipo_afectividad === "AGRESIÓN DE PAREJA (HOMBRE A MUJER) - V. GÉNERO")
+    },
+    { key:"vg_p28", title:"¿Tiene o ha tenido orden de protección?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.condicion === "VICTIMA" && st.tipo_afectividad === "AGRESIÓN DE PAREJA (HOMBRE A MUJER) - V. GÉNERO")
+    },
+    { key:"vg_p28b", title:"¿Sobre el autor?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.condicion === "VICTIMA" && st.tipo_afectividad === "AGRESIÓN DE PAREJA (HOMBRE A MUJER) - V. GÉNERO" && st.vg_p28 === "SI")
+    },
+    { key:"vg_p28_solicita", title:"¿DESEA SOLICITAR ORDEN DE PROTECCIÓN?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.condicion === "VICTIMA" && st.tipo_afectividad === "AGRESIÓN DE PAREJA (HOMBRE A MUJER) - V. GÉNERO" && (st.vg_p28 === "NO" || (st.vg_p28 === "SI" && (st.vg_p28b === "SI" || st.vg_p28b === "NO"))))
+    },
+    { key:"vg_p29", title:"¿Está siendo atendida por servicios sociales o sanitarios?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.condicion === "VICTIMA" && st.tipo_afectividad === "AGRESIÓN DE PAREJA (HOMBRE A MUJER) - V. GÉNERO")
+    },
+    { key:"vg_p30a", title:"¿Alguna persona de su entorno conoce la situación?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.condicion === "VICTIMA" && st.tipo_afectividad === "AGRESIÓN DE PAREJA (HOMBRE A MUJER) - V. GÉNERO")
+    },
+    { key:"vg_p30b", title:"¿Depende usted económicamente de él?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.condicion === "VICTIMA" && st.tipo_afectividad === "AGRESIÓN DE PAREJA (HOMBRE A MUJER) - V. GÉNERO")
+    },
+    { key:"vg_p31", title:"¿Cree usted que la situación puede empeorar?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.condicion === "VICTIMA" && st.tipo_afectividad === "AGRESIÓN DE PAREJA (HOMBRE A MUJER) - V. GÉNERO")
+    },
+    { key:"vg_p32", title:"¿Tiene miedo real por su vida?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.condicion === "VICTIMA" && st.tipo_afectividad === "AGRESIÓN DE PAREJA (HOMBRE A MUJER) - V. GÉNERO")
+    },
+
+    // V.DOMÉSTICA (solo víctima)
+    { key:"vd_menores", title:"¿HECHOS EN PRESENCIA DE MENORES?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.condicion === "VICTIMA" && st.tipo_afectividad === "RESTO DE CASOS - V. DOMÉSTICA")
+    },
+    { key:"vd_domicilio", title:"¿HECHOS EN DOMICILIO FAMILIAR?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.condicion === "VICTIMA" && st.tipo_afectividad === "RESTO DE CASOS - V. DOMÉSTICA")
+    },
+    { key:"vd_anteriores", title:"¿HECHOS ANTERIORES SIMILARES?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.condicion === "VICTIMA" && st.tipo_afectividad === "RESTO DE CASOS - V. DOMÉSTICA")
+    },
+
+    // Cierre
+    { key:"resumen", title:"BREVE RESUMEN DE LOS HECHOS", type:"textarea", max:900 }
+  ],
+
+  // =============================
+  // AMENAZAS: BASE = archivo + TU CAMBIO (vincular a VG/VD si conoce autor)
+  // =============================
+  "AMENAZAS_GLOBAL": [
+    // Base de amenazas.html (idéntico hasta conoce_autor)
+    {
+      key: "condicion",
+      title: "DENUNCIA EN CALIDAD DE...",
+      type: "select",
+      options: ["PERJUDICADO", "TESTIGO"]
+    },
+    {
+      key: "fhl",
+      title: "FECHA, HORA Y LUGAR DEL HECHO",
+      type: "fhl",
+      placeholderLugar: "Calle / zona / municipio"
+    },
+    {
+      key: "conoce_autor",
+      title: "¿CONOCE AL AUTOR DE LOS HECHOS?",
+      type: "select",
+      options: ["NO", "SI"]
+    },
+
+    // TU CAMBIO: si conoce autor, preguntar tipo de vínculo para enganchar VG/VD sin “ir” a agresión
+    {
+      key: "vinculo_autor",
+      title: "VÍNCULO CON EL AUTOR",
+      type: "select",
+      options: [
+        "AUTOR VARÓN Y PAREJA (O SIMILAR AFECTIVIDAD EN EL PRESENTE O PASADO) - V. GÉNERO",
+        "AUTOR/A DEL ENTORNO FAMILIAR - V. DOMÉSTICA",
+        "OTRO"
+      ],
+      when: (st)=> (st.conoce_autor === "SI")
+    },
+
+    // Identificación (solo si conoce autor y elige “otro”)
+    {
+      key: "quien_es",
+      title: "NOMBRE Y/O RELACIÓN QUE LE UNE",
+      type: "text",
+      when: (st)=> (st.conoce_autor === "SI" && st.vinculo_autor === "OTRO")
+    },
+
+    // “Copiamos desde 3a3” -> aquí copiado en forma de preguntas VG/VD (solo si PERJUDICADO)
+    { key:"hay_convivencia", title:"¿HAY CONVIVENCIA?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.conoce_autor === "SI" && st.condicion === "PERJUDICADO" && (st.vinculo_autor === "AUTOR VARÓN Y PAREJA (O SIMILAR AFECTIVIDAD EN EL PRESENTE O PASADO) - V. GÉNERO" || st.vinculo_autor === "AUTOR/A DEL ENTORNO FAMILIAR - V. DOMÉSTICA"))
+    },
+    { key:"relacion_autor", title:"RELACIÓN QUE LE UNE AL AUTOR/A", type:"text",
+      when:(st)=> (st.conoce_autor === "SI" && st.condicion === "PERJUDICADO" && (st.vinculo_autor === "AUTOR VARÓN Y PAREJA (O SIMILAR AFECTIVIDAD EN EL PRESENTE O PASADO) - V. GÉNERO" || st.vinculo_autor === "AUTOR/A DEL ENTORNO FAMILIAR - V. DOMÉSTICA"))
+    },
+
+    // V.G.: preguntas de control/riesgo (mismo bloque que antes, sin mezclar con “agresión”)
+    { key:"vg_p9",  title:"¿Le ha agredido físicamente en otra ocasión?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.conoce_autor === "SI" && st.condicion === "PERJUDICADO" && st.vinculo_autor === "AUTOR VARÓN Y PAREJA (O SIMILAR AFECTIVIDAD EN EL PRESENTE O PASADO) - V. GÉNERO")
+    },
+    { key:"vg_p10", title:"¿Le ha insultado, humillado o amenazado?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.conoce_autor === "SI" && st.condicion === "PERJUDICADO" && st.vinculo_autor === "AUTOR VARÓN Y PAREJA (O SIMILAR AFECTIVIDAD EN EL PRESENTE O PASADO) - V. GÉNERO")
+    },
+    { key:"vg_p11", title:"¿Le controla el teléfono, redes sociales o amistades?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.conoce_autor === "SI" && st.condicion === "PERJUDICADO" && st.vinculo_autor === "AUTOR VARÓN Y PAREJA (O SIMILAR AFECTIVIDAD EN EL PRESENTE O PASADO) - V. GÉNERO")
+    },
+    { key:"vg_p12", title:"¿Le impide trabajar, estudiar o relacionarse?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.conoce_autor === "SI" && st.condicion === "PERJUDICADO" && st.vinculo_autor === "AUTOR VARÓN Y PAREJA (O SIMILAR AFECTIVIDAD EN EL PRESENTE O PASADO) - V. GÉNERO")
+    },
+    { key:"vg_p13", title:"¿Le obliga o ha obligado a mantener relaciones sexuales?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.conoce_autor === "SI" && st.condicion === "PERJUDICADO" && st.vinculo_autor === "AUTOR VARÓN Y PAREJA (O SIMILAR AFECTIVIDAD EN EL PRESENTE O PASADO) - V. GÉNERO")
+    },
+    { key:"vg_p14", title:"¿Ha destruido objetos o amenazado con hacerlo?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.conoce_autor === "SI" && st.condicion === "PERJUDICADO" && st.vinculo_autor === "AUTOR VARÓN Y PAREJA (O SIMILAR AFECTIVIDAD EN EL PRESENTE O PASADO) - V. GÉNERO")
+    },
+    { key:"vg_p15", title:"¿Le ha dicho que la va a matar?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.conoce_autor === "SI" && st.condicion === "PERJUDICADO" && st.vinculo_autor === "AUTOR VARÓN Y PAREJA (O SIMILAR AFECTIVIDAD EN EL PRESENTE O PASADO) - V. GÉNERO")
+    },
+    { key:"vg_p16", title:"¿Ha amenazado con suicidarse si usted lo deja?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.conoce_autor === "SI" && st.condicion === "PERJUDICADO" && st.vinculo_autor === "AUTOR VARÓN Y PAREJA (O SIMILAR AFECTIVIDAD EN EL PRESENTE O PASADO) - V. GÉNERO")
+    },
+    { key:"vg_p17", title:"¿Tiene acceso a armas, cuchillos u objetos peligrosos?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.conoce_autor === "SI" && st.condicion === "PERJUDICADO" && st.vinculo_autor === "AUTOR VARÓN Y PAREJA (O SIMILAR AFECTIVIDAD EN EL PRESENTE O PASADO) - V. GÉNERO")
+    },
+    { key:"vg_p18", title:"¿Consume alcohol o drogas de forma habitual?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.conoce_autor === "SI" && st.condicion === "PERJUDICADO" && st.vinculo_autor === "AUTOR VARÓN Y PAREJA (O SIMILAR AFECTIVIDAD EN EL PRESENTE O PASADO) - V. GÉNERO")
+    },
+{ key:"vg_p18_det", title:"Describe qué tipo de sustancias y habitualidad", type:"text",
+      when:(st)=> (st.conoce_autor === "SI" && st.condicion === "PERJUDICADO" && st.vinculo_autor === "AUTOR VARÓN Y PAREJA (O SIMILAR AFECTIVIDAD EN EL PRESENTE O PASADO) - V. GÉNERO" && st.vg_p18 === "SI")
+    },
+    { key:"vg_p19", title:"¿Se vuelve más violento cuando consume?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.conoce_autor === "SI" && st.condicion === "PERJUDICADO" && st.vinculo_autor === "AUTOR VARÓN Y PAREJA (O SIMILAR AFECTIVIDAD EN EL PRESENTE O PASADO) - V. GÉNERO")
+    },
+    { key:"vg_p20", title:"¿Los episodios han aumentado en frecuencia o gravedad?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.conoce_autor === "SI" && st.condicion === "PERJUDICADO" && st.vinculo_autor === "AUTOR VARÓN Y PAREJA (O SIMILAR AFECTIVIDAD EN EL PRESENTE O PASADO) - V. GÉNERO")
+    },
+    { key:"vg_p21", title:"¿La violencia comenzó hace poco o lleva tiempo ocurriendo?", type:"text",
+      when:(st)=> (st.conoce_autor === "SI" && st.condicion === "PERJUDICADO" && st.vinculo_autor === "AUTOR VARÓN Y PAREJA (O SIMILAR AFECTIVIDAD EN EL PRESENTE O PASADO) - V. GÉNERO")
+    },
+    { key:"vg_p22", title:"¿Ha intentado usted separarse anteriormente?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.conoce_autor === "SI" && st.condicion === "PERJUDICADO" && st.vinculo_autor === "AUTOR VARÓN Y PAREJA (O SIMILAR AFECTIVIDAD EN EL PRESENTE O PASADO) - V. GÉNERO")
+    },
+    { key:"vg_p23", title:"¿Qué ocurrió cuando lo intentó?", type:"text",
+      when:(st)=> (st.conoce_autor === "SI" && st.condicion === "PERJUDICADO" && st.vinculo_autor === "AUTOR VARÓN Y PAREJA (O SIMILAR AFECTIVIDAD EN EL PRESENTE O PASADO) - V. GÉNERO" && st.vg_p22 === "SI")
+    },
+    { key:"vg_p24", title:"¿Hay menores que presencien los hechos?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.conoce_autor === "SI" && st.condicion === "PERJUDICADO" && st.vinculo_autor === "AUTOR VARÓN Y PAREJA (O SIMILAR AFECTIVIDAD EN EL PRESENTE O PASADO) - V. GÉNERO")
+    },
+    { key:"vg_p25", title:"¿Ha agredido o amenazado alguna vez a los menores?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.conoce_autor === "SI" && st.condicion === "PERJUDICADO" && st.vinculo_autor === "AUTOR VARÓN Y PAREJA (O SIMILAR AFECTIVIDAD EN EL PRESENTE O PASADO) - V. GÉNERO" && st.vg_p24 === "SI")
+    },
+    { key:"vg_p26", title:"¿Cree que los menores están en peligro?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.conoce_autor === "SI" && st.condicion === "PERJUDICADO" && st.vinculo_autor === "AUTOR VARÓN Y PAREJA (O SIMILAR AFECTIVIDAD EN EL PRESENTE O PASADO) - V. GÉNERO" && st.vg_p24 === "SI")
+    },
+    { key:"vg_p27", title:"¿Ha denunciado anteriormente estos hechos?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.conoce_autor === "SI" && st.condicion === "PERJUDICADO" && st.vinculo_autor === "AUTOR VARÓN Y PAREJA (O SIMILAR AFECTIVIDAD EN EL PRESENTE O PASADO) - V. GÉNERO")
+    },
+    { key:"vg_p28", title:"¿Tiene o ha tenido orden de protección?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.conoce_autor === "SI" && st.condicion === "PERJUDICADO" && st.vinculo_autor === "AUTOR VARÓN Y PAREJA (O SIMILAR AFECTIVIDAD EN EL PRESENTE O PASADO) - V. GÉNERO")
+    },
+    { key:"vg_p28b", title:"¿Sobre el autor?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.conoce_autor === "SI" && st.condicion === "PERJUDICADO" && st.vinculo_autor === "AUTOR VARÓN Y PAREJA (O SIMILAR AFECTIVIDAD EN EL PRESENTE O PASADO) - V. GÉNERO" && st.vg_p28 === "SI")
+    },
+    { key:"vg_p28_solicita", title:"¿DESEA SOLICITAR ORDEN DE PROTECCIÓN?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.conoce_autor === "SI" && st.condicion === "PERJUDICADO" && st.vinculo_autor === "AUTOR VARÓN Y PAREJA (O SIMILAR AFECTIVIDAD EN EL PRESENTE O PASADO) - V. GÉNERO" && (st.vg_p28 === "SI" || st.vg_p28 === "NO"))
+    },
+    { key:"vg_p29", title:"¿Está siendo atendida por servicios sociales o sanitarios?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.conoce_autor === "SI" && st.condicion === "PERJUDICADO" && st.vinculo_autor === "AUTOR VARÓN Y PAREJA (O SIMILAR AFECTIVIDAD EN EL PRESENTE O PASADO) - V. GÉNERO")
+    },
+    { key:"vg_p30a", title:"¿Alguna persona de su entorno conoce la situación?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.conoce_autor === "SI" && st.condicion === "PERJUDICADO" && st.vinculo_autor === "AUTOR VARÓN Y PAREJA (O SIMILAR AFECTIVIDAD EN EL PRESENTE O PASADO) - V. GÉNERO")
+    },
+    { key:"vg_p30b", title:"¿Depende usted económicamente de él?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.conoce_autor === "SI" && st.condicion === "PERJUDICADO" && st.vinculo_autor === "AUTOR VARÓN Y PAREJA (O SIMILAR AFECTIVIDAD EN EL PRESENTE O PASADO) - V. GÉNERO")
+    },
+    { key:"vg_p31", title:"¿Cree usted que la situación puede empeorar?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.conoce_autor === "SI" && st.condicion === "PERJUDICADO" && st.vinculo_autor === "AUTOR VARÓN Y PAREJA (O SIMILAR AFECTIVIDAD EN EL PRESENTE O PASADO) - V. GÉNERO")
+    },
+    { key:"vg_p32", title:"¿Tiene miedo real por su vida?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.conoce_autor === "SI" && st.condicion === "PERJUDICADO" && st.vinculo_autor === "AUTOR VARÓN Y PAREJA (O SIMILAR AFECTIVIDAD EN EL PRESENTE O PASADO) - V. GÉNERO")
+    },
+
+    // V.DOMÉSTICA: preguntas tras “lesiones” (aquí solo el bloque VD que pediste)
+    { key:"vd_menores", title:"¿HECHOS EN PRESENCIA DE MENORES?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.conoce_autor === "SI" && st.condicion === "PERJUDICADO" && st.vinculo_autor === "AUTOR/A DEL ENTORNO FAMILIAR - V. DOMÉSTICA")
+    },
+    { key:"vd_domicilio", title:"¿HECHOS EN DOMICILIO FAMILIAR?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.conoce_autor === "SI" && st.condicion === "PERJUDICADO" && st.vinculo_autor === "AUTOR/A DEL ENTORNO FAMILIAR - V. DOMÉSTICA")
+    },
+    { key:"vd_anteriores", title:"¿HECHOS ANTERIORES SIMILARES?", type:"select", options:["SI","NO"],
+      when:(st)=> (st.conoce_autor === "SI" && st.condicion === "PERJUDICADO" && st.vinculo_autor === "AUTOR/A DEL ENTORNO FAMILIAR - V. DOMÉSTICA")
+    },
+
+    // Continuación normal amenazas (archivo)
+    {
+      key: "tipo_amenaza",
+      title: "¿CUÁLES FUERON LAS AMENAZAS?",
+      type: "textarea",
+      max: 900
+    },
+    {
+      key: "descripcion_autor",
+      title: "DESCRIPCIÓN DEL AUTOR",
+      type: "textarea",
+      max: 900,
+      when: (st)=> (st.conoce_autor === "NO")
+    },
+    {
+      key: "resumen",
+      title: "BREVE RESUMEN DE LOS HECHOS",
+      type: "textarea",
+      max: 900
+    }
+  ],
+
+  // =============================
+  // CARÁCTER SEXUAL (lo tuyo)
+  // =============================
+  "CARACTER_SEXUAL": [
+    { key:"condicion", title:"DENUNCIA EN CALIDAD DE...", type:"select", options:["VICTIMA","TESTIGO"] },
+    { key:"fhl", title:"FECHA, HORA Y LUGAR DEL HECHO", type:"fhl", placeholderLugar:"Calle / zona / municipio" },
+    { key:"conoce_autor", title:"¿CONOCE AL AUTOR DE LOS HECHOS?", type:"select", options:["SI","NO"] },
+    { key:"datos_autor", title:"AÑADA DATOS DEL AUTOR", type:"text",
+      when:(st)=> (st.conoce_autor === "SI")
+    },
+    { key:"descripcion_autor", title:"DESCRIPCIÓN DEL AUTOR", type:"textarea", max:900,
+      when:(st)=> (st.conoce_autor === "NO")
+    },
+    { key:"resumen", title:"BREVE RESUMEN DE LOS HECHOS", type:"textarea", max:900 }
+  ],
+
+  // =============================
+  // OTROS (mínimo global)
+  // =============================
+  "OTROS": [
+    { key:"condicion", title:"DENUNCIA EN CALIDAD DE...", type:"select", options:["PERJUDICADO","TESTIGO"] },
+    { key:"fhl", title:"FECHA, HORA Y LUGAR DEL HECHO", type:"fhl", placeholderLugar:"Calle / zona / municipio" },
+    { key:"resumen", title:"BREVE RESUMEN DE LOS HECHOS", type:"textarea", max:900 }
+  ]
+};
+
+const EXPORT_KEY_MAP = QUESTION_SETS["EXPORT_KEY_MAP"] || {};
+
+// =============================
+// Router GLOBAL (GLOBAL_ROUTES + QUESTION_SETS)
+// =============================
+function routeFromEntry(st){
+  const pick = (st.caracteristica_hecho||"").trim();
+  return (GLOBAL_ROUTES.ENTRY && GLOBAL_ROUTES.ENTRY[pick]) || null;
+}
+
+function routeFromSustraccion(st){
+  const pick = (st.sustraccion_donde||"").trim();
+  return (GLOBAL_ROUTES.SUSTRACCION_SELECTOR && GLOBAL_ROUTES.SUSTRACCION_SELECTOR[pick]) || null;
+}
+
+function routeFromAgresion(st){
+  const pick = (st.agresion_tipo||"").trim();
+  return (GLOBAL_ROUTES.AGRESION_SELECTOR && GLOBAL_ROUTES.AGRESION_SELECTOR[pick]) || null;
+}
+
+function resolveLeafTipo(st){
+  // GLOBAL_nt: devuelve el tipo final (leaf) según las selecciones actuales.
+  let t = routeFromEntry(st);
+  if (!t) return null;
+
+  if (t === "SUSTRACCION_SELECTOR"){
+    const t2 = routeFromSustraccion(st);
+    return t2 || "SUSTRACCION_SELECTOR";
+  }
+
+  if (t === "AGRESION_SELECTOR"){
+    const t2 = routeFromAgresion(st);
+    return t2 || "AGRESION_SELECTOR";
+  }
+
+  return t;
+}
+
+function buildQuestionFlow(st){
+  const out = [];
+
+  // 1) Siempre empezamos por GLOBAL
+  out.push(...(QUESTION_SETS["GLOBAL"] || []));
+
+  // Defaults ANTES del routing (si no, el flujo se queda en GLOBAL y aparece FINALIZAR)
+  if (!st.caracteristica_hecho){
+    const q0 = QUESTION_SETS["GLOBAL"]?.[0];
+    const def0 = q0?.options?.[0] || "";
+    if (def0) st.caracteristica_hecho = def0;
+  }
+
+  // 2) ENTRY -> ...
+  const t1 = routeFromEntry(st);
+  if (!t1) return out;
+
+  if (QUESTION_SETS[t1]) out.push(...QUESTION_SETS[t1]);
+
+  if (t1 === "SUSTRACCION_SELECTOR"){
+    if (!st.sustraccion_donde){
+      const q1 = QUESTION_SETS["SUSTRACCION_SELECTOR"]?.[0];
+      const def1 = q1?.options?.[0] || "";
+      if (def1) st.sustraccion_donde = def1;
+    }
+    const t2 = routeFromSustraccion(st);
+    if (t2 && QUESTION_SETS[t2]) out.push(...QUESTION_SETS[t2]);
+    return out;
+  }
+
+  if (t1 === "AGRESION_SELECTOR"){
+    if (!st.agresion_tipo){
+      const q2 = QUESTION_SETS["AGRESION_SELECTOR"]?.[0];
+      const def2 = q2?.options?.[0] || "";
+      if (def2) st.agresion_tipo = def2;
+    }
+    const t2 = routeFromAgresion(st);
+    if (t2 && QUESTION_SETS[t2]) out.push(...QUESTION_SETS[t2]);
+    return out;
+  }
+
+  return out;
+}
+
+function getQuestionsFor(){
+  // Mantengo el nombre para no romper el resto: ahora ignora "tipo" y usa GLOBAL_ROUTES.
+  return buildQuestionFlow(wiz.st);
+}
+
+function currentTipoFinal(){
+  return resolveLeafTipo(wiz.st) || "GLOBAL";
+}
+
+// =============================
+// Estado wizard
+// =============================
+let objetosState = [];
+const wiz = {
+  idx: 0,                 // 0 = filiación (pantalla fija)
+  steps: [],              // [{q, el, inputEl?}]
+  st: {                   // respuestas
+    // GLOBAL
+    caracteristica_hecho:"",
+
+    // SELECTORES
+    sustraccion_donde:"",
+    agresion_tipo:"",
+
+    // RESTO
+    calidad_denunciante:"PERJUDICADO",
+    conocimiento_hecho:"",
+    fecha:"",
+    hora:"",
+    hora_desde:"",
+    hora_hasta:"",
+    lugar:"",
+    conoce_autor:"",
+    datos_autor:"",
+    descripcion_autor:"",
+    interaccion_autor:"",
+    autor_retenido:"",
+    lesiones:"NO",
+    parte_medico:"NO",
+    camaras:"NO",
+    camaras_detalle:"",
+    resumen:""
+  }
+};
+
+function storageKey(){ return "pred_GLOBAL_"+token; }
+
+function readFiliacion(){
+  return {
+  "Nombre": ($("fNombre").value||"").trim(),
+"Apellidos": ($("fApellidos").value||"").trim().toUpperCase(),
+  "Tipo de documento": ($("fTipoDoc").value||"").trim(),
+  "Otro documento": ($("fTipoDoc").value||"").trim() === "Otro documento de Identidad" ? ($("fOtroDoc").value||"").trim() : "",
+  "Nº Documento": ($("fNumDoc").value||"").trim(),
+  "Sexo": ($("fSexo").value||"").trim(),
+  "Nacionalidad": ($("fNac").value||"").trim(),
+  "Nombre de los Padres": ($("fPadres").value||"").trim(),
+  "Fecha de nacimiento": ($("fNacFecha").value||"").trim(),
+  "País nacimiento": ($("fNacPais").value||"").trim(),
+  "Lugar de nacimiento": ($("fNacLugar").value||"").trim(),
+  "Provincia nacimiento": ($("fNacProvOut").value||"").trim(),
+  "Municipio nacimiento": ($("fNacMunOut").value||"").trim(),
+  "Domicilio": computeDomicilio(),
+  "Teléfono": ($("fTel").value||"").trim(),
+  "Condición": (wiz.st.calidad_denunciante||"").trim()
+};
+}
+function buildHechosAskedOnly(){
+  const out = {};
+  const qs = getQuestionsFor();
+
+  for (const q of qs){
+    if (!shouldShowQuestion(q)) continue;
+
+    // FHL: exporta sus campos asociados si no están vacíos
+    if (q.type === "fhl"){
+      const f = (wiz.st.fecha||"").trim(); if (f) out.fecha = f;
+      const l = (wiz.st.lugar||"").trim(); if (l) out.lugar = l;
+
+      const h  = (wiz.st.hora||"").trim();       if (h)  out.hora = h;
+      const hd = (wiz.st.hora_desde||"").trim(); if (hd) out.hora_desde = hd;
+      const hh = (wiz.st.hora_hasta||"").trim(); if (hh) out.hora_hasta = hh;
+      continue;
+    }
+
+    // Objects: exporta solo si hay objetos
+    if (q.type === "objects"){
+      if (objetosState.length) out.objetos = objetosState.slice();
+      continue;
+    }
+
+    // Resto: key => valor si no está vacío
+    const k = q.key;
+    if (!k) continue;
+    const v = wiz.st[k];
+    if (v === undefined || v === null) continue;
+    const s = String(v).trim();
+    if (!s) continue;
+    out[k] = s;
+  }
+
+  return out;
+}
+function buildPayload(){
+  const tipoFinal = currentTipoFinal();
+  let conocimiento_hecho = (wiz.st.conocimiento_hecho||"").trim();
+  // En AGRESIÓN, el conocimiento es siempre TESTIGO DIRECTO (no se pregunta).
+  if (tipoFinal === "LESIONES" || tipoFinal === "AGRESION_FAMILIAR_AFECTIVO"){
+    conocimiento_hecho = "TESTIGO DIRECTO";
+  }
+  const lesiones = (wiz.st.lesiones||"NO");
+  const cam = (wiz.st.camaras||"NO");
+  return {
+    meta: { tipo_delictivo: currentTipoFinal(), token, version: 2, createdAt: new Date().toISOString() },
+    filiacion: readFiliacion(),
+  hechos: exportForChatGPT(buildHechosAskedOnly())
+  };
+}
+function exportForChatGPT(state, map = EXPORT_KEY_MAP){
+  const has = (o,k)=> Object.prototype.hasOwnProperty.call(o,k);
+  const isObj = (v)=> v && typeof v === "object" && !Array.isArray(v);
+
+  const rec = (v)=>{
+    if (Array.isArray(v)) return v.map(rec).filter(x => x !== undefined);
+    if (isObj(v)){
+      const out = {};
+      for (const k of Object.keys(v)){
+        const x = rec(v[k]);
+        // NO filtra "NO": solo quita undefined/null/"" y objetos/arrays vacíos
+        if (x === undefined || x === null || x === "") continue;
+        if (Array.isArray(x) && x.length === 0) continue;
+        if (isObj(x) && Object.keys(x).length === 0) continue;
+        out[k] = x;
+      }
+      return out;
+    }
+    return v;
+  };
+
+  const out = {};
+  for (const k of Object.keys(state)){
+    if (!has(state, k)) continue;               // solo preguntas realmente respondidas
+    const v = rec(state[k]);
+    if (v === undefined || v === null || v === "") continue;
+    if (Array.isArray(v) && v.length === 0) continue;
+    if (isObj(v) && Object.keys(v).length === 0) continue;
+    out[map[k] || k] = v;                       // renombra a clave “entendible”
+  }
+  return out;
+}
+
+function shouldShowQuestion(q){
+  if (typeof q.when === "function"){
+    try{ return !!q.when(wiz.st); }catch(_){ return false; }
+  }
+  return true;
+}
+
+function setStatus(t){
+  const el = $("wizStatus");
+  if (el) el.textContent = t || "";
+}
+
+// =============================
+// Render pasos dinámicos
+// =============================
+function makeStepEl(q){
+  const wrap = document.createElement("div");
+  wrap.className = "step";
+  wrap.dataset.key = q.key;
+
+  const title = document.createElement("div");
+  title.className = "stepTitle";
+  title.textContent = trUI(q.title);
+  wrap.appendChild(title);
+
+  let inputEl = null;
+
+  if (q.type === "select"){
+    const panel = document.createElement("div");
+    panel.className = "stepPanel";
+
+    const box = document.createElement("div");
+    box.className = "choices pills";
+
+    const current = (wiz.st[q.key] || "").trim();
+    const def = (q.options && q.options[0]) ? q.options[0] : "";
+    const initial = current || def;
+    if (!wiz.st[q.key] && initial) wiz.st[q.key] = initial;
+
+    for (const opt of (q.options||[])){
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "choiceBtn";
+      b.textContent = trUI(opt);
+      b.dataset.value = opt;
+      b.classList.toggle("isPicked", opt === wiz.st[q.key]);
+      b.addEventListener("click", ()=>{
+        wiz.st[q.key] = opt;
+        // refresca resaltado
+        box.querySelectorAll(".choiceBtn").forEach(x=>x.classList.toggle("isPicked", x.dataset.value === opt));
+        // Recalcula flujo GLOBAL (GLOBAL -> selectores -> leaf)
+        renderWizard();
+      });
+      box.appendChild(b);
+    }
+
+    panel.appendChild(box);
+    wrap.appendChild(panel);
+    inputEl = box.querySelector(".choiceBtn.isPicked") || box.querySelector(".choiceBtn") || null;
+  }
+
+  // --- FHL wizard step (Fecha + Hora + Lugar) ---
+  if (q.type === "fhl"){
+    const panel = document.createElement("div");
+    panel.className = "stepPanel";
+
+    const g = document.createElement("div");
+    g.className = "grid";
+    const isInterval = (q.interval === true) || (q.intervalo === true);
+
+    const w1 = document.createElement("div");
+    const l1 = document.createElement("label");
+    l1.textContent = "Date";
+    const i1 = document.createElement("input");
+    i1.type = "date";
+    i1.id = "q_fecha";
+    i1.value = wiz.st.fecha || "";
+    i1.addEventListener("input", ()=>{ wiz.st.fecha = i1.value; });
+    w1.appendChild(l1);
+    w1.appendChild(i1);
+
+    // hora/interval
+    let w2 = null;
+    let w2b = null;
+
+    if (isInterval){
+      // Dos campos independientes (DESDE / HASTA) para que siempre se vean.
+      w2 = document.createElement("div");
+      const l2a = document.createElement("label");
+      l2a.textContent = "Time (from)";
+      const i2a = document.createElement("input");
+      i2a.type = "time";
+      i2a.id = "q_hora_desde";
+      i2a.value = wiz.st.hora_desde || "";
+      i2a.addEventListener("input", ()=>{
+        wiz.st.hora_desde = i2a.value;
+        wiz.st.hora = (wiz.st.hora_desde && wiz.st.hora_hasta) ? (wiz.st.hora_desde + " - " + wiz.st.hora_hasta) : "";
+      });
+      w2.appendChild(l2a);
+      w2.appendChild(i2a);
+
+      w2b = document.createElement("div");
+      const l2b = document.createElement("label");
+      l2b.textContent = "Time (to)";
+      const i2b = document.createElement("input");
+      i2b.type = "time";
+      i2b.id = "q_hora_hasta";
+      i2b.value = wiz.st.hora_hasta || "";
+      i2b.addEventListener("input", ()=>{
+        wiz.st.hora_hasta = i2b.value;
+        wiz.st.hora = (wiz.st.hora_desde && wiz.st.hora_hasta) ? (wiz.st.hora_desde + " - " + wiz.st.hora_hasta) : "";
+      });
+      w2b.appendChild(l2b);
+      w2b.appendChild(i2b);
+
+    } else {
+      w2 = document.createElement("div");
+      const l2 = document.createElement("label");
+      l2.textContent = "Time";
+      const i2 = document.createElement("input");
+      i2.type = "time";
+      i2.id = "q_hora";
+      i2.value = wiz.st.hora || "";
+      i2.addEventListener("input", ()=>{ 
+        wiz.st.hora = i2.value;
+        wiz.st.hora_desde = "";
+        wiz.st.hora_hasta = "";
+      });
+      w2.appendChild(l2);
+      w2.appendChild(i2);
+    }
+
+    const w3 = document.createElement("div");
+    w3.style.gridColumn = "1/-1";
+    const l3 = document.createElement("label");
+    l3.textContent = "Location";
+    const i3 = document.createElement("input");
+    i3.type = "text";
+    i3.id = "q_lugar";
+    i3.placeholder = trUI(q.placeholderLugar || "");
+    i3.value = wiz.st.lugar || "";
+    i3.addEventListener("input", ()=>{ wiz.st.lugar = i3.value; });
+    w3.appendChild(l3);
+    w3.appendChild(i3);
+
+    g.appendChild(w1);
+    if (w2) g.appendChild(w2);
+    if (w2b) g.appendChild(w2b);
+    g.appendChild(w3);
+
+    panel.appendChild(g);
+    wrap.appendChild(panel);
+    inputEl = i1;
+  }
+
+  if (q.type === "date" || q.type === "time"){
+    const inp = document.createElement("input");
+    inp.type = q.type;
+    inp.id = "q_"+q.key;
+    inp.value = wiz.st[q.key] || "";
+    inp.addEventListener("input", ()=>{ wiz.st[q.key] = inp.value; });
+    wrap.appendChild(inp);
+    inputEl = inp;
+  }
+
+  if (q.type === "text"){
+    const inp = document.createElement("input");
+    inp.type = "text";
+    inp.id = "q_"+q.key;
+    inp.placeholder = trUI(q.placeholder || "");
+    inp.value = wiz.st[q.key] || "";
+    inp.addEventListener("input", ()=>{ wiz.st[q.key] = inp.value; });
+    wrap.appendChild(inp);
+    inputEl = inp;
+  }
+
+  if (q.type === "textarea"){
+    const ta = document.createElement("textarea");
+    ta.id = "q_"+q.key;
+    ta.placeholder = trUI(q.placeholder || "");
+    if (q.max) ta.maxLength = q.max;
+    ta.value = wiz.st[q.key] || "";
+    if (q.key === "resumen") ta.style.minHeight = "260px";
+    ta.addEventListener("input", ()=>{ wiz.st[q.key] = ta.value; });
+    wrap.appendChild(ta);
+    inputEl = ta;
+  }
+
+  if (q.type === "objects"){
+    const row = document.createElement("div");
+    row.className = "row";
+    row.style.justifyContent = "space-between";
+
+    const b = document.createElement("button");
+    b.className = "btn secondary";
+    b.type = "button";
+    b.id = "q_objBtn";
+    b.textContent = trUI("AÑADIR / EDITAR OBJETOS");
+    b.addEventListener("click", openObjs);
+
+    const c = document.createElement("div");
+    c.className = "muted";
+    c.id = "q_objCount";
+    c.textContent = String(objetosState.length);
+
+    row.appendChild(b);
+    row.appendChild(c);
+    wrap.appendChild(row);
+
+  }
+
+  return { el: wrap, inputEl };
+}
+
+function renderWizard(){
+  const dyn = $("dynSteps");
+  dyn.innerHTML = "";
+
+  const qs = getQuestionsFor();
+  wiz.steps = [];
+
+  for (const q of qs){
+    const { el, inputEl } = makeStepEl(q);
+    dyn.appendChild(el);
+    wiz.steps.push({ q, el, inputEl });
+  }
+
+  // Si el flujo cambia (GLOBAL_ROUTES), asegúrate de que el índice actual sigue siendo válido y visible.
+  const last = lastRealStep();
+  if (wiz.idx > last) wiz.idx = last;
+  if (wiz.idx < 0) wiz.idx = 0;
+  if (!isRealStepVisible(wiz.idx)){
+    const n = nextVisibleReal(wiz.idx);
+    const p = prevVisibleReal(wiz.idx);
+    wiz.idx = (n !== null) ? n : (p !== null) ? p : 0;
+  }
+
+  updateStepUI(false);
+}
+
+function totalVisibleSteps(){
+  // paso 0 (filiación) + visibles de preguntas
+  let n = 1;
+  for (const s of wiz.steps){
+    if (shouldShowQuestion(s.q)) n++;
+  }
+  return n;
+}
+
+function visibleStepIndices(){
+  // índices lógicos: 0=filiación, 1..N preguntas visibles en orden
+  const out = [0];
+  let k = 1;
+  for (const s of wiz.steps){
+    if (shouldShowQuestion(s.q)) out.push(k);
+    k++;
+  }
+  return out;
+}
+
+function logicalToRealIndex(logicalIdx){
+  // logicalIdx: 0=filiación; 1.. = orden de preguntas (incluye ocultas)
+  // Aquí usamos wiz.idx como índice REAL: 0=filiación, 1..=posición en wiz.steps
+  // Mantendremos wiz.idx como REAL.
+  return logicalIdx;
+}
+
+function firstRealStep(){ return 0; }
+function lastRealStep(){ return wiz.steps.length; }
+
+function isRealStepVisible(realIdx){
+  if (realIdx === 0) return true;
+  const s = wiz.steps[realIdx-1];
+  if (!s) return false;
+  return shouldShowQuestion(s.q);
+}
+
+function nextVisibleReal(from){
+  for (let i = from+1; i <= lastRealStep(); i++){
+    if (isRealStepVisible(i)) return i;
+  }
+  return null;
+}
+
+function prevVisibleReal(from){
+  for (let i = from-1; i >= firstRealStep(); i--){
+    if (isRealStepVisible(i)) return i;
+  }
+  return null;
+}
+
+function updateProgress(){
+  const total = totalVisibleSteps();
+  // posición visible actual
+  let pos = 1;
+  if (wiz.idx === 0){
+    pos = 1;
+  } else {
+    // cuenta visibles hasta wiz.idx
+    pos = 1;
+    for (let i = 1; i <= wiz.idx; i++){
+      if (isRealStepVisible(i)) pos++;
+    }
+  }
+  const p = $("wizProgress");
+  if (p) p.textContent = `Step ${pos} of ${total}`;
+}
+
+function updateStepUI(focus){
+  // Mostrar/ocultar la sección de filiación fuera del wizard
+  const bf = document.getElementById("boxFiliacion");
+  if (bf) bf.classList.toggle("isHidden", wiz.idx !== 0);
+  const isMobile = window.matchMedia("(max-width:720px)").matches;
+  const lockScroll = (wiz.idx !== 0) && isMobile;
+  document.body.classList.toggle("noScroll", lockScroll);
+
+  // Título superior (donde estaba "Predenuncia")
+  const pt = document.getElementById("pageTitle");
+  if (pt){
+    if (wiz.idx === 0){
+      pt.textContent = "IDENTIFICATION DETAILS";
+    } else {
+      const s = wiz.steps[wiz.idx-1];
+      pt.textContent = (s && s.q && s.q.title) ? trUI(String(s.q.title)) : "";
+    }
+  }
+
+  // Pasos dinámicos
+  for (let i=0;i<wiz.steps.length;i++){
+    const realIdx = i+1;
+    const isActive = (wiz.idx === realIdx);
+    wiz.steps[i].el.classList.toggle("isActive", isActive);
+  }
+
+  // Botones
+  const prev = $("btnPrev");
+  const next = $("btnNext");
+  const fin = $("btnFinish");
+
+  const hasPrev = prevVisibleReal(wiz.idx) !== null;
+  prev.disabled = !hasPrev;
+
+  // En la pantalla de filiación (idx 0) SIEMPRE mostramos SIGUIENTE y ocultamos FINALIZAR.
+  // Evita que un fallo de cálculo de visibilidad deje al usuario con FINALIZAR desde el inicio.
+  if (wiz.idx === 0){
+    next.style.display = "inline-block";
+    fin.style.display = "none";
+  } else {
+    const hasNext = nextVisibleReal(wiz.idx) !== null;
+    next.style.display = hasNext ? "inline-block" : "none";
+    fin.style.display = hasNext ? "none" : "inline-block";
+  }
+
+  updateProgress();
+
+  // SIN AUTOFOCUS
+// El teclado, calendario o reloj solo se abre si el usuario toca el campo
+}
+
+function validateCurrentStep(){
+  setStatus("");
+
+ if (wiz.idx === 0){
+  const nat = normUp($("fNac")?.value);
+  if (!nat || !__PAISES_SET.has(nat)){
+    setStatus(trUI("Selecciona una NACIONALIDAD válida (usa las píldoras)."));
+    return false;
+  }
+
+  const paisNac = normUp($("fNacPais")?.value);
+  if (!paisNac || !__PAISES_SET.has(paisNac)){
+    setStatus(trUI("Selecciona un PAÍS de nacimiento válido (usa las píldoras)."));
+    return false;
+  }
+
+  if (paisNac === "ESPAÑA"){
+    const prov = ($("fNacProv")?.value||"").trim();
+    const mun  = ($("fNacMun")?.value||"").trim();
+    if (!prov || !mun){
+      setStatus(trUI("Si el país de nacimiento es ESPAÑA, selecciona PROVINCIA y MUNICIPIO."));
+      return false;
+    }
+  }
+
+  return true;
+}
+
+  const s = wiz.steps[wiz.idx-1];
+  if (!s) return true;
+
+  // Para selects/datos básicos: no forzamos salvo campos críticos.
+  // Si quieres hacer obligatorios, aquí es donde se marca.
+  return true;
+}
+
+function goTo(realIdx){
+  wiz.idx = realIdx;
+  updateStepUI(false);
+}
+
+$("btnPrev").addEventListener("click", ()=>{
+  const p = prevVisibleReal(wiz.idx);
+  if (p !== null) goTo(p);
+});
+
+$("btnNext").addEventListener("click", ()=>{
+  if (!validateCurrentStep()) return;
+  const n = nextVisibleReal(wiz.idx);
+  if (n !== null) goTo(n);
+});
+
+$("btnFinish").addEventListener("click", async ()=>{
+  await saveFinal();
+});
+
+// =============================
+// Objetos modal (se mantiene)
+// =============================
+function updateObjsCount(){
+  const n = objetosState.length;
+  const el = $("objsCount");
+  if (el) el.textContent = String(n);
+  const el2 = $("q_objCount");
+  if (el2) el2.textContent = String(n);
+}
+
+function openObjs(){
+  renderObjs();
+  const b = $("objsBack");
+  if (b) b.style.display = "flex";
+}
+function closeObjs(){
+  const b = $("objsBack");
+  if (b) b.style.display = "none";
+}
+
+function renderObjs(){
+  const list = $("objsList");
+  if (!list) return;
+  list.innerHTML = "";
+
+  if (!objetosState.length){
+    const empty = document.createElement("div");
+    empty.className = "muted";
+    empty.textContent = trUI("Sin objetos.");
+    list.appendChild(empty);
+    return;
+  }
+
+  objetosState.forEach((o, idx)=>{
+    const row = document.createElement("div");
+    row.className = "objRow";
+
+    const card = document.createElement("div");
+    card.className = "objCard";
+
+    const tipoI = document.createElement("input");
+    tipoI.className = "objTipo";
+    tipoI.placeholder = "Type";
+    tipoI.value = o.tipo || "";
+    tipoI.addEventListener("input", ()=>{ o.tipo = tipoI.value; });
+
+    const cantI = document.createElement("input");
+    cantI.className = "objCant";
+    cantI.placeholder = "Quantity";
+    cantI.inputMode = "numeric";
+    cantI.value = o.cantidad || "";
+    cantI.addEventListener("input", ()=>{ o.cantidad = cantI.value; });
+
+    const valI = document.createElement("input");
+    valI.className = "objVal";
+    valI.placeholder = "Total value (€)";
+    valI.inputMode = "numeric";
+    valI.value = o.valor_total_eur || "";
+valI.addEventListener("input", ()=>{ o.valor_total_eur = valI.value; });
+
+    const del = document.createElement("button");
+    del.className = "btn danger objDel";
+    del.type = "button";
+    del.textContent = "X";
+    del.addEventListener("click", ()=>{
+      objetosState.splice(idx, 1);
+      renderObjs();
+      updateObjsCount();
+    });
+
+    row.appendChild(tipoI);
+    row.appendChild(cantI);
+    row.appendChild(valI);
+    row.appendChild(del);
+
+    card.appendChild(row);
+    list.appendChild(card);
+  });
+}
+
+$("btnCloseObjs").addEventListener("click", closeObjs);
+$("objsBack").addEventListener("click", (e)=>{ if (e.target === $("objsBack")) closeObjs(); });
+
+$("btnAddObj").addEventListener("click", ()=>{
+  objetosState.push({ tipo:"", cantidad:"", valor_total_eur:"" });
+  renderObjs();
+  updateObjsCount();
+});
+
+$("btnSaveObjs").addEventListener("click", ()=>{
+  objetosState = objetosState.filter(o => (o.tipo||"").trim() || (o.cantidad||"").trim() || (o.valor_total_eur||"").trim());
+  updateObjsCount();
+  closeObjs();
+});
+
+// =============================
+// Guardado / carga
+// =============================
+async function saveFinal(){
+  try{
+    if (!token){ alert(trUI("Falta token en la URL.")); return; }
+
+    const p = buildPayload();
+
+    try{
+      const outLocal = { estado:"FINALIZADA", ...p };
+      localStorage.setItem(storageKey(), JSON.stringify(outLocal));
+    }catch(_){ }
+
+    const ref = doc(db, "predenuncias", token);
+
+    await setDoc(ref, {
+      estado: "FINALIZADA",
+      tipo: currentTipoFinal(),
+      token,
+      filiacion: p.filiacion,
+      hechos: p.hechos,
+      createdAt: serverTimestamp(),
+      finalizedAt: serverTimestamp()
+    }, { merge: true });
+
+    const msg = $("doneMsg");
+    if (msg) msg.style.display = "block";
+    document.body.innerHTML = `
+      <div style="min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:28px">
+        <div style="max-width:720px;width:100%;text-align:center;border:1px solid rgba(255,255,255,.10);border-radius:18px;padding:18px;background:rgba(255,255,255,.06);backdrop-filter:blur(10px) saturate(130%);-webkit-backdrop-filter:blur(10px) saturate(130%);box-shadow:0 18px 46px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.06)">
+          <h2 style="margin:0 0 10px;font-weight:900;letter-spacing:.2px">
+            Report submitted successfully
+          </h2>
+          <p style="margin:0;color:rgba(255,255,255,.72)">
+            This link can no longer be used.
+          </p>
+        </div>
+      </div>
+    `;
+    return;
+
+  }catch(err){
+    const m = (err && err.message) ? err.message : String(err);
+    alert(trUI("ERROR AL FINALIZAR: ") + m);
+  }
+}
+
+function invalidateIfFinalized(){
+  const raw = localStorage.getItem(storageKey());
+  if (!raw) return;
+
+  try{
+    const x = JSON.parse(raw);
+    if (x.estado === "FINALIZADA"){
+      document.body.innerHTML = `
+        <div style="min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:28px">
+          <div style="max-width:720px;width:100%;text-align:center;border:1px solid rgba(255,255,255,.10);border-radius:18px;padding:18px;background:rgba(255,255,255,.06);backdrop-filter:blur(10px) saturate(130%);-webkit-backdrop-filter:blur(10px) saturate(130%);box-shadow:0 18px 46px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.06)">
+            <h2 style="margin:0 0 10px;font-weight:900;letter-spacing:.2px">
+              Report submitted successfully
+            </h2>
+            <p style="margin:0;color:rgba(255,255,255,.72)">
+              This link can no longer be used.
+            </p>
+          </div>
+        </div>
+      `;
+      throw "__STOP__";
+    }
+  }catch(e){
+    if (e !== "__STOP__") {}
+  }
+}
+
+function loadIfAny(){
+  const raw = localStorage.getItem(storageKey());
+  if (!raw) return;
+  try{
+    const x = JSON.parse(raw);
+
+    // Filiación
+    const f = x.filiacion || {};
+    $("fNombre").value = f["Nombre"]||"";
+    $("fApellidos").value = f["Apellidos"]||"";
+    $("fTipoDoc").value = f["Tipo de documento"]||"DNI";
+    $("fOtroDoc").value = f["Otro documento"]||"";
+    applyTipoDocVisibility();
+    $("fNumDoc").value = f["Nº Documento"]||"";
+    $("fNac").value = f["Nacionalidad"]||"";
+    $("fNacFecha").value = f["Fecha de nacimiento"]||"";
+    $("fNacLugar").value = f["Lugar de nacimiento"]||"";
+    $("fDomDir").value = f["Domicilio"]||"";
+    $("fDomPais").value = "";
+    $("fTel").value = f["Teléfono"]||"";
+    $("fSexo").value = f["Sexo"]||"";
+    $("fPadres").value = f["Nombre de los Padres"]||"";
+    $("fNacPais").value = f["País nacimiento"]||"";
+    $("fNacLugar").value = f["Lugar de nacimiento"]||"";
+    $("fNacProvOut").value = f["Provincia nacimiento"]||"";
+    $("fNacMunOut").value = f["Municipio nacimiento"]||"";
+
+    try{ toggleNacEsUI(); }catch(_){ }
+
+    // Hechos
+    const h = x.hechos || {};
+    wiz.st.calidad_denunciante = h.calidad_denunciante || "";
+    wiz.st.conocimiento_hecho = h.conocimiento_hecho || "";
+    wiz.st.fecha = h.fecha || "";
+    wiz.st.hora = h.hora || "";
+    wiz.st.hora_desde = "";
+    wiz.st.hora_hasta = "";
+    if (wiz.st.hora && wiz.st.hora.includes(" - ")){
+      const parts = wiz.st.hora.split(" - ");
+      wiz.st.hora_desde = (parts[0] || "").trim();
+      wiz.st.hora_hasta = (parts[1] || "").trim();
+    }
+    wiz.st.lugar = h.lugar || "";
+    wiz.st.interaccion_autor = h.interaccion_autor || "";
+    wiz.st.autor_retenido = h.autor_retenido || "";
+    wiz.st.lesiones = h.lesiones || "NO";
+    wiz.st.parte_medico = h.parte_medico || "NO";
+    wiz.st.camaras = h.camaras || "NO";
+    wiz.st.camaras_detalle = h.camaras_detalle || "";
+    wiz.st.resumen = h.resumen || "";
+
+    objetosState = Array.isArray(h.objetos) ? h.objetos.slice() : [];
+    updateObjsCount();
+
+  }catch(_){ }
+}
+
+// INIT
+invalidateIfFinalized();
+loadIfAny();
+renderWizard();
+applyTipoDocVisibility();
+updateObjsCount();
+renderNacPills();
+try{ toggleNacEsUI(); }catch(_){ }
+try{ toggleDomEsUI(); }catch(_){ }
+try{
+  const isMobile = window.matchMedia("(max-width:720px)").matches;
+  document.body.classList.toggle("noScroll", (wiz.idx !== 0) && isMobile);
+}catch(_){ }
+window.addEventListener("resize", ()=>{
+  try{ updateStepUI(false); }catch(_){ }
+});
+// Si hay tipo desconocido, lo dejamos funcionando igualmente.
+</script>
+</body>
+</html>
