@@ -832,7 +832,7 @@ function renderRegistros(){
 
     const left = document.createElement("div");
     left.className = "left";
-    left.innerHTML = `<div class="t">${escapeHtml(r.filename)}</div>`;
+left.innerHTML = `<div class="t">🦸🏿‍♂️ ${escapeHtml(r.filename)}</div>`;
     el.appendChild(left);
 
     const del = document.createElement("button");
@@ -933,7 +933,15 @@ function renderDenuncias(){
 
     const left = document.createElement("div");
     left.className = "left";
-    left.innerHTML = `<div class="t">${escapeHtml(d.nombre)}</div>`;
+const sexo = (d.filiacion?.Sexo || d.filiacion?.SEXO || "").toString().toUpperCase();
+
+const icon =
+  
+  sexo.startsWith("F") ? "🙍🏻‍♀️" :
+  sexo.startsWith("MUJ") ? "🙍🏻‍♀️" :
+  "👨🏼‍💼";
+
+left.innerHTML = `<div class="t">${icon} ${escapeHtml(d.nombre)}</div>`;
     el.appendChild(left);
 
     const del = document.createElement("button");
@@ -1257,7 +1265,7 @@ $("btnDownload").addEventListener("click", async ()=>{
 function startInboxListener(uid){
   const q = query(
     collection(db, "denupolInbox"),
-    
+   
     orderBy("createdAt", "desc"),
     limit(50)
   );
