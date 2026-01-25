@@ -313,6 +313,26 @@
     margin:0 auto;
   }
 
+   /* ===== SOLO GLOBAL: pantalla inicial de categoría (ligeramente mayor) ===== */
+  .step[data-key="caracteristica_hecho"] .choices.pills{
+    gap:18px;
+    max-width:680px;
+  }
+  .step[data-key="caracteristica_hecho"] .choices.pills .choiceBtn{
+    padding:15px 18px;
+    font-size:14px;
+    letter-spacing:.25px;
+  }
+  @media(max-width:720px){
+    .step[data-key="caracteristica_hecho"] .choices.pills{
+      gap:16px;
+    }
+    .step[data-key="caracteristica_hecho"] .choices.pills .choiceBtn{
+      padding:14px 16px;
+      font-size:14px;
+    }
+  }
+
   /* Evita el zoom al pulsar inputs en iPhone */
   @media(max-width:720px){
     input,select,textarea{font-size:16px}
