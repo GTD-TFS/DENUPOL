@@ -338,45 +338,60 @@ textarea,
   #btnLogout,#btnGenToken,#btnViewJson,#btnViewDoc,#btnChatGPT,#btnPersist,#btnDownload{color:var(--label) !important;}
   .card .row > div:first-child{color:var(--label);}
 a.btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
+/* ===== TRIPLE TOGGLE (Predenuncias / Detenidos / Entradas) ===== */
 .modeToggle{
-  display:flex;
+  display:inline-flex;
   align-items:center;
-  gap:6px;
-  padding:6px 12px;
+  padding:6px;
   border-radius:999px;
-
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:
+    0 14px 36px rgba(0,0,0,.45),
+    inset 0 1px 0 rgba(255,255,255,.10);
+  backdrop-filter: blur(14px) saturate(130%);
+  -webkit-backdrop-filter: blur(14px) saturate(130%);
+}
+.modeToggle .seg{
+  appearance:none;
+  border:0;
   background:transparent;
-  border:1px solid transparent;
-
-  cursor:pointer;
+  color:rgba(255,255,255,.92);
+  padding:12px 22px;
+  border-radius:999px;
   font-weight:900;
-  color:var(--label);
+  letter-spacing:.2px;
+  cursor:pointer;
+  transition:background .15s ease, transform .12s ease, opacity .12s ease;
+  opacity:.70;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  min-width:120px;
 }
-
-.modeToggle:hover span{
+.modeToggle .seg:hover{ opacity:1; }
+.modeToggle .seg:active{ transform:scale(.99); }
+.modeToggle .seg.on{
   opacity:1;
+  background:rgba(255,255,255,.10);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.10),
+    inset 0 10px 22px rgba(0,0,0,.18);
 }
-
-.modeToggle span{
-  transition:opacity .15s ease, transform .15s ease, filter .15s ease;
-  opacity:.30;
-}
-
-.modeToggle span.on{
-  opacity:1;
-  transform:scale(1.12);
-  filter:drop-shadow(0 0 6px rgba(214,176,106,.65));
-}
-
-.modeToggle .swap{
-  opacity:.45;
+@media (max-width: 720px){
+  .modeToggle .seg{ min-width:0; padding:10px 14px; }
 }
 
 /* ===== MODO DETENIDOS (registros): ocultar editor/acciones de texto ===== */
 body.regMode .toolbar,
-body.regMode #area{
+body.regMode #area,
+body.inboxMode .toolbar,
+body.inboxMode #area{
   display:none !important;
 }
+/* En ENTRADAS ocultamos PERSISTIR (solo lista/descarga) */
+body.inboxMode #btnPersist{ display:none !important; }
 </style>
 </head>
 <body>
@@ -409,11 +424,11 @@ body.regMode #area{
  <div class="topActions">
   <button class="btn pill gray" id="btnLogout">SALIR</button>
 
-  <button id="modeToggle" class="modeToggle" type="button">
-    <span id="modeLeft" class="on">👨🏼‍💼📋</span>
-    <span class="swap">⇄</span>
-    <span id="modeRight">⛓️🦸🏿‍♂️</span>
-  </button>
+  <div id="modeToggle" class="modeToggle" role="tablist" aria-label="Modo">
+    <button class="seg on" id="modePred" type="button" role="tab" aria-selected="true">👨🏼‍💼📋</button>
+    <button class="seg" id="modeReg" type="button" role="tab" aria-selected="false">⛓️🦸🏿‍♂️</button>
+    <button class="seg" id="modeInbox" type="button" role="tab" aria-selected="false">👮🏼‍♂️📋</button>
+  </div>
 
   <button class="qrBtn" id="btnGenToken" type="button">
     <span class="srOnly">GENERADOR TOKEN</span>
@@ -659,11 +674,15 @@ const state = {
   registros: [],
   selectedReg: null, // {id, filename, encJson, createdAt}
 
+  // ENTRADAS (inbox de JSON recibidos)
+  inbox: [],
+  selectedInbox: null, // {id, title, payload, createdAt}
+
   // ui
   gptUrl: "https://chatgpt.com/g/g-69014d0cf61881918dd3773943228c6b-denupol",
   view: "json", // "json" | "doc"
   dirtyDoc: false,
-  mode: "predenuncias", // "predenuncias" | "registros"
+  mode: "predenuncias", // "predenuncias" | "registros" | "inbox"
 
   // auth
   userUid: null
@@ -694,6 +713,10 @@ function renderSelectedIntoArea(){
     return;
   }
 
+  if (state.mode === "inbox"){
+    return;
+  }
+
   // modo predenuncias
   if (!state.selected){
     a.value = "";
@@ -713,16 +736,17 @@ function renderSelectedIntoArea(){
 }
 
 function setMode(m){
-  state.mode = (m === "registros") ? "registros" : "predenuncias";
+  state.mode = (m === "registros") ? "registros" : (m === "inbox" ? "inbox" : "predenuncias");
+
   // limpiar selección cruzada
-  if (state.mode === "predenuncias") state.selectedReg = null;
-  if (state.mode === "registros") state.selected = null;
+  if (state.mode !== "predenuncias") state.selected = null;
+  if (state.mode !== "registros") state.selectedReg = null;
+  if (state.mode !== "inbox") state.selectedInbox = null;
 
-
-
-  // Modo registros (detenidos): ocultar editor/acciones de texto
+  // Clases de modo
   try{
     document.body.classList.toggle("regMode", state.mode === "registros");
+    document.body.classList.toggle("inboxMode", state.mode === "inbox");
   }catch(_){ }
 
   renderCurrentList();
@@ -733,22 +757,28 @@ function setMode(m){
 }
 
 function syncModeToggle(){
-  const l = $("modeLeft");
-  const r = $("modeRight");
-  if (!l || !r) return;
+  const p = $("modePred");
+  const r = $("modeReg");
+  const i = $("modeInbox");
+  if (!p || !r || !i) return;
 
-  if (state.mode === "registros"){
-    l.classList.remove("on");
-    r.classList.add("on");
-  } else {
-    r.classList.remove("on");
-    l.classList.add("on");
-  }
+  const isP = state.mode === "predenuncias";
+  const isR = state.mode === "registros";
+  const isI = state.mode === "inbox";
+
+  p.classList.toggle("on", isP);
+  r.classList.toggle("on", isR);
+  i.classList.toggle("on", isI);
+
+  p.setAttribute("aria-selected", isP ? "true" : "false");
+  r.setAttribute("aria-selected", isR ? "true" : "false");
+  i.setAttribute("aria-selected", isI ? "true" : "false");
 }
 
 function renderCurrentList(){
-  if (state.mode === "registros") renderRegistros();
-  else renderDenuncias();
+  if (state.mode === "registros") return renderRegistros();
+  if (state.mode === "inbox") return renderInbox();
+  return renderDenuncias();
 }
 /* ========= FIRESTORE: LISTENER (registros cifrados) ========= */
 function startRegistrosListener(uid){
@@ -956,19 +986,24 @@ function refreshActions(){
   const bd = $("btnDownload");
 
   if (state.mode === "registros"){
-    // En registros: no hay persistencia de área (se persiste desde Registro), sólo descarga del archivo seleccionado.
     if (bp) bp.disabled = true;
     if (bd) bd.disabled = !state.selectedReg;
     return;
   }
 
+  if (state.mode === "inbox"){
+    if (bp) bp.disabled = true;
+    if (bd) bd.disabled = !state.selectedInbox;
+    return;
+  }
+
   // predenuncias
   const hasSel = !!state.selected;
-  if (bp) bp.disabled = false; // PERSISTIR queda siempre disponible
+  if (bp) bp.disabled = false;
   if (bd) bd.disabled = !hasSel;
 
   const bjson = $("btnCopyFinalJson");
-  if (bjson) bjson.disabled = true; // oculto; no se usa
+  if (bjson) bjson.disabled = true;
 }
 $("area").addEventListener("input", ()=>{
   // Mantenemos dirtyDoc por si lo quieres usar para UI, pero ya no bloquea PERSISTIR.
@@ -1072,9 +1107,10 @@ $("btnChatGPT").addEventListener("click", ()=>{
   window.open(state.gptUrl, "_blank", "noopener");
 });
 
-$("modeToggle").addEventListener("click", ()=>{
-  setMode(state.mode === "registros" ? "predenuncias" : "registros");
-});
+
+$("modePred")?.addEventListener("click", ()=> setMode("predenuncias"));
+$("modeReg")?.addEventListener("click", ()=> setMode("registros"));
+$("modeInbox")?.addEventListener("click", ()=> setMode("inbox"));
 
 const __btnCopyFinalJson = $("btnCopyFinalJson");
 if (__btnCopyFinalJson){
@@ -1134,6 +1170,42 @@ $("btnDownload").addEventListener("click", async ()=>{
       return;
     }
 
+    // ENTRADAS: descarga el JSON recibido tal cual
+    if (state.mode === "inbox"){
+      if (!state.selectedInbox) return;
+      const payload = state.selectedInbox.payload || {};
+      const jsonText = JSON.stringify(payload, null, 2);
+      const nombre = ensureJsonExt(sanitizeFileName(`ENTRADA_${state.selectedInbox.title || state.selectedInbox.id}`));
+      const blob = new Blob([jsonText], {type:"application/json;charset=utf-8"});
+
+      if (navigator.canShare){
+        try{
+          const file = new File([blob], nombre, {type:"application/json"});
+          if (navigator.canShare({ files: [file] })){
+            await navigator.share({ files:[file], title:nombre, text:"JSON ENTRADA" });
+            return;
+          }
+        }catch(e){ }
+      }
+
+      if (window.showSaveFilePicker){
+        try{
+          const handle = await window.showSaveFilePicker({
+            suggestedName: nombre,
+            types: [{ description: "JSON", accept: { "application/json": [".json"] } }]
+          });
+          const w = await handle.createWritable();
+          await w.write(blob);
+          await w.close();
+          return;
+        }catch(e){ }
+      }
+
+      const url = URL.createObjectURL(blob);
+      openExportModal(url, jsonText, nombre);
+      return;
+    }
+
     // PREDENUNCIAS: exporta snapshot {doc,filiaciones}
     if (!state.selected) return;
 
@@ -1180,6 +1252,104 @@ $("btnDownload").addEventListener("click", async ()=>{
     alert("ERROR DESCARGAR: " + msg);
   }
 });
+/* ========= FIRESTORE: LISTENER (ENTRADAS inbox) ========= */
+function startInboxListener(uid){
+  const q = query(
+    collection(db, "denupolInbox"),
+    where("uid", "==", uid),
+    orderBy("createdAt", "desc"),
+    limit(50)
+  );
+
+  return onSnapshot(q, (snap)=>{
+    const out = [];
+    snap.forEach((d)=>{
+      const x = d.data() || {};
+      const fil = Array.isArray(x.filiaciones) ? x.filiaciones : [];
+      const f0 = fil[0] || {};
+      const nombre = (`${f0["Nombre"]||""} ${f0["Apellidos"]||""}`).trim();
+      const title = (nombre || x.email || d.id).toString();
+      out.push({
+        id: d.id,
+        title,
+        payload: x,
+        createdAt: x.createdAt || null
+      });
+    });
+
+    state.inbox = out;
+    if (state.mode === "inbox") renderInbox();
+
+    if (state.selectedInbox){
+      const nx = out.find(z=>z.id===state.selectedInbox.id);
+      if (nx) state.selectedInbox = nx;
+    }
+  }, (err)=>{
+    console.warn("onSnapshot inbox error", err);
+    const m = (err && err.message) ? err.message : String(err);
+    $("denStatus").textContent = "ERROR Firebase: " + m;
+  });
+}
+
+/* ========= UI: ENTRADAS LIST ========= */
+function renderInbox(){
+  const box = $("denList");
+  box.innerHTML = "";
+  const status = $("denStatus");
+  if (!state.inbox.length){
+    if (status) status.textContent = "";
+    return;
+  }
+  if (status) status.textContent = "";
+
+  for (const r of state.inbox){
+    const el = document.createElement("div");
+    el.className = "item";
+
+    const left = document.createElement("div");
+    left.className = "left";
+    left.innerHTML = `<div class="t">${escapeHtml(r.title)}</div>`;
+    el.appendChild(left);
+
+    const del = document.createElement("button");
+    del.type = "button";
+    del.className = "iconBtn";
+    del.title = "Eliminar";
+    del.textContent = "X";
+    del.addEventListener("click", async (ev)=>{
+      ev.stopPropagation();
+      const ok = confirm("¿Eliminar esta entrada?");
+      if (!ok) return;
+      try{
+        await deleteDoc(doc(db, "denupolInbox", r.id));
+        if (state.selectedInbox && state.selectedInbox.id === r.id){
+          state.selectedInbox = null;
+          $("selectedRef").textContent = "—";
+          refreshActions();
+        }
+      }catch(err){
+        const m = (err && err.message) ? err.message : String(err);
+        alert("ERROR al eliminar: " + m);
+      }
+    });
+    el.appendChild(del);
+
+    el.addEventListener("click", ()=>selectInbox(r.id));
+    box.appendChild(el);
+  }
+}
+
+function selectInbox(id){
+  const r = state.inbox.find(x=>x.id===id);
+  if (!r) return;
+  state.selectedInbox = r;
+  state.selected = null;
+  state.selectedReg = null;
+  state.dirtyDoc = false;
+  $("selectedRef").textContent = r.title;
+  $("workStatus").textContent = "";
+  refreshActions();
+}
 
 /* ========= GENERADOR TOKEN + MODAL QR ========= */
 let qr = null;
@@ -1277,6 +1447,7 @@ $("btnLogout").addEventListener("click", async ()=>{
 const appRoot = document.getElementById("app");
 let __unsubPred = null;
 let __unsubRegs = null;
+let __unsubInbox = null;
 const gate = document.getElementById("loginGate");
 const loginForm = document.getElementById("loginForm");
 const loginStatus = document.getElementById("loginStatus");
@@ -1325,9 +1496,11 @@ onAuthStateChanged(auth, async (user)=>{
     if (!__unsubPred) __unsubPred = startFirestoreListener();
     state.userUid = user.uid || null;
     if (!__unsubRegs && state.userUid) __unsubRegs = startRegistrosListener(state.userUid);
+    if (!__unsubInbox && state.userUid) __unsubInbox = startInboxListener(state.userUid);
   } else {
     if (__unsubPred){ try{ __unsubPred(); }catch(_){ } __unsubPred = null; }
     if (__unsubRegs){ try{ __unsubRegs(); }catch(_){ } __unsubRegs = null; }
+    if (__unsubInbox){ try{ __unsubInbox(); }catch(_){ } __unsubInbox = null; }
     state.selected = null;
     state.denuncias = [];
     state.view = "json";
@@ -1336,6 +1509,7 @@ onAuthStateChanged(auth, async (user)=>{
     state.selectedReg = null;
     state.mode = "predenuncias";
     state.userUid = null;
+    state.inbox = []; state.selectedInbox = null;
     try{ const a = $("area"); if (a) a.value = ""; }catch(_){ }
     try{ document.body.classList.remove("regMode"); }catch(_){ }
     if (appRoot) appRoot.hidden = true;
