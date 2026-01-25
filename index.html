@@ -1173,8 +1173,9 @@ $("btnDownload").addEventListener("click", async ()=>{
     // ENTRADAS: descarga el JSON recibido tal cual
     if (state.mode === "inbox"){
       if (!state.selectedInbox) return;
-      const payload = state.selectedInbox.payload || {};
-      const jsonText = JSON.stringify(payload, null, 2);
+      const x = state.selectedInbox.payload || {};
+      const exportObj = x.__compapol_enc_v1 ? {alg:x.alg,kdf:x.kdf,it:x.it,__compapol_enc_v1:x.__compapol_enc_v1} : x;
+      const jsonText = JSON.stringify(exportObj, null, 2);
       const nombre = ensureJsonExt(sanitizeFileName(`ENTRADA_${state.selectedInbox.title || state.selectedInbox.id}`));
       const blob = new Blob([jsonText], {type:"application/json;charset=utf-8"});
 
@@ -1265,10 +1266,24 @@ function startInboxListener(uid){
     const out = [];
     snap.forEach((d)=>{
       const x = d.data() || {};
-      const fil = Array.isArray(x.filiaciones) ? x.filiaciones : [];
-      const f0 = fil[0] || {};
-      const nombre = (`${f0["Nombre"]||""} ${f0["Apellidos"]||""}`).trim();
-      const title = (nombre || x.email || d.id).toString();
+      // Título visual: fecha/hora de creación, sin email ni id
+      const created =
+        x.createdAt && x.createdAt.toDate
+          ? x.createdAt.toDate()
+          : (x.createdAt instanceof Date ? x.createdAt : null);
+
+      const pad = n => String(n).padStart(2, "0");
+
+      const fecha = created
+        ? `${pad(created.getDate())}/${pad(created.getMonth()+1)}/${String(created.getFullYear()).slice(-2)}`
+        : "--/--/--";
+
+      const hora = created
+        ? `${pad(created.getHours())}:${pad(created.getMinutes())}h`
+        : "--:--h";
+
+      const title = `📥 Comparecencia · ${fecha} · ${hora}`;
+
       out.push({
         id: d.id,
         title,
