@@ -1257,7 +1257,7 @@ $("btnDownload").addEventListener("click", async ()=>{
 function startInboxListener(uid){
   const q = query(
     collection(db, "denupolInbox"),
-    where("uid", "==", uid),
+    
     orderBy("createdAt", "desc"),
     limit(50)
   );
