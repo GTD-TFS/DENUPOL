@@ -1,36 +1,36 @@
 
 
 // === LÓGICA CORE: extraído desde Registro odt-roa.html ===
-function sanitizeForFilename(s){return String(s||'').replace(/[\/\:*?"<>|]+/g,' ').trim();}
-function U(s){ return String(s ?? '').toUpperCase(); } // MAYÚSCULAS
+function sanitizeForFilename(s) { return String(s || '').replace(/[\/\:*?"<>|]+/g, ' ').trim(); }
+function U(s) { return String(s ?? '').toUpperCase(); } // MAYÚSCULAS
 
 // Mostrar inputs "OTRO" + bloquear NºDOC si indocumentado + mostrar IDIOMA si intérprete "OTRO"
-document.addEventListener('change',e=>{
-  if(e.target.id==="tipoDocumento"){
-    const val=e.target.value;
-    document.getElementById('tipoDocumentoOtro').style.display=(val==="OTRO")?"block":"none";
-    const num=document.getElementById("numeroDocumento");
-    const up = String(val||'').toUpperCase();
-    if(up==="INDOCUMENTADO" || up==="INDOCUMENTADA"){ num.value=""; num.disabled=true; } else { num.disabled=false; }
+document.addEventListener('change', e => {
+  if (e.target.id === "tipoDocumento") {
+    const val = e.target.value;
+    document.getElementById('tipoDocumentoOtro').style.display = (val === "OTRO") ? "block" : "none";
+    const num = document.getElementById("numeroDocumento");
+    const up = String(val || '').toUpperCase();
+    if (up === "INDOCUMENTADO" || up === "INDOCUMENTADA") { num.value = ""; num.disabled = true; } else { num.disabled = false; }
   }
-  if(e.target.id==="interpreteOpcion"){
-    document.getElementById('idioma').style.display=(e.target.value==="OTRO")?"block":"none";
+  if (e.target.id === "interpreteOpcion") {
+    document.getElementById('idioma').style.display = (e.target.value === "OTRO") ? "block" : "none";
   }
   // 🔄 Si cambia el sexo, ajustar tipoDocumento si corresponde
   if (e.target.id === "sexoOpcion") {
     const tipo = document.getElementById('tipoDocumento');
     if (!tipo) return;
-    const sex = String(e.target.value||'').toUpperCase();
-    const v = String(tipo.value||'').toUpperCase();
-    if (v === 'INDOCUMENTADO' || v === 'INDOCUMENTADA'){
+    const sex = String(e.target.value || '').toUpperCase();
+    const v = String(tipo.value || '').toUpperCase();
+    if (v === 'INDOCUMENTADO' || v === 'INDOCUMENTADA') {
       tipo.value = (sex === 'FEMENINO') ? 'INDOCUMENTADA' : 'INDOCUMENTADO';
       tipo.dispatchEvent(new Event('change'));
     }
   }
-  if(e.target.tagName==="SELECT" && e.target.closest('.field-card')){
-    const input=e.target.closest('.field-card').querySelector('input[type="text"]');
-    if(input && !["tipoDocumento","interpreteOpcion"].includes(e.target.id)){
-      input.style.display=(e.target.value==="OTRO")?"block":"none";
+  if (e.target.tagName === "SELECT" && e.target.closest('.field-card')) {
+    const input = e.target.closest('.field-card').querySelector('input[type="text"]');
+    if (input && !["tipoDocumento", "interpreteOpcion"].includes(e.target.id)) {
+      input.style.display = (e.target.value === "OTRO") ? "block" : "none";
     }
   }
 });
@@ -40,19 +40,19 @@ const lista = document.getElementById("delitosSeleccionados");
 const inputOtro = document.getElementById("delitoOtroTexto");
 let delitosElegidos = [];
 
-selectDelito.addEventListener("change", ()=>{
+selectDelito.addEventListener("change", () => {
   const val = selectDelito.value;
   if (val === "OTRO") { inputOtro.style.display = "inline-block"; inputOtro.focus(); return; }
   if (val && !delitosElegidos.includes(val)) { delitosElegidos.push(val); renderDelitos(); }
   selectDelito.value = "";
 });
 
-inputOtro.addEventListener("keydown", e=>{
-  if(e.key==="Enter"){
+inputOtro.addEventListener("keydown", e => {
+  if (e.key === "Enter") {
     e.preventDefault();
     const val = inputOtro.value.trim();
-    if(val && !delitosElegidos.includes(val)){ delitosElegidos.push(val); renderDelitos(); }
-    inputOtro.value=""; inputOtro.style.display="none"; selectDelito.value="";
+    if (val && !delitosElegidos.includes(val)) { delitosElegidos.push(val); renderDelitos(); }
+    inputOtro.value = ""; inputOtro.style.display = "none"; selectDelito.value = "";
   }
 });
 
@@ -94,7 +94,7 @@ renderDelitos(); // fuerza estado inicial del borde
 // Normaliza: quita acentos, pasa a mayúsculas y compacta
 function normalizeKey(str) {
   return str
-    ? str.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().replace(/[^A-Z0-9]/g,"").trim()
+    ? str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/[^A-Z0-9]/g, "").trim()
     : "";
 }
 
@@ -117,9 +117,9 @@ function setSelectWithInput(selectName, excelValue) {
   }
 
   if (!matched) {
-    if (!excelValue || ["NOAPORTA","NO","DEOFICIO"].includes(normExcel)) {
+    if (!excelValue || ["NOAPORTA", "NO", "DEOFICIO"].includes(normExcel)) {
       const fallback = Array.from(select.options).find(opt =>
-        ["NOAPORTA","NO","DEOFICIO"].includes(normalizeKey(opt.value))
+        ["NOAPORTA", "NO", "DEOFICIO"].includes(normalizeKey(opt.value))
       );
       if (fallback) select.value = fallback.value;
       if (textInput) { textInput.value = ""; textInput.style.display = "none"; }
@@ -132,7 +132,7 @@ function setSelectWithInput(selectName, excelValue) {
 }
 
 // Guardar JSON con FSA
-async function saveBlobJson(text, filename){
+async function saveBlobJson(text, filename) {
   const blob = new Blob([text], { type: 'application/json;charset=utf-8' });
   if (window.showSaveFilePicker) {
     try {
@@ -144,7 +144,7 @@ async function saveBlobJson(text, filename){
       await writable.write(blob);
       await writable.close();
       return;
-    } catch(e) {
+    } catch (e) {
       // Si el usuario cancela, no hacemos descarga directa
       if (e && (e.name === 'AbortError' || e.code === 20)) {
         console.warn('Guardado JSON cancelado por el usuario');
@@ -157,53 +157,53 @@ async function saveBlobJson(text, filename){
   const a = document.createElement('a');
   a.href = url; a.download = filename;
   document.body.appendChild(a); a.click();
-  setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 1500);
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1500);
 }
 
 const RUTA_ROA = "./roa.html";
-function splitApellidos(s){ s=String(s||"").trim(); if(!s) return {primer:"",segundo:""}; const p=s.split(/\s+/); return {primer:p[0]||"", segundo:p.slice(1).join(" ")}; }
-function sexoAHoM(v){ const Uv=String(v||"").toUpperCase(); if(Uv.startsWith("MASC")) return "H"; if(Uv.startsWith("FEM")) return "M"; return ""; }
-function buildRoaPayloadFromRegistro(data){
-  const ap=splitApellidos(data["APELLIDOS"]);
-  const domDisplay=(data["DOMICILIO_OPCION"]==="APORTA")
+function splitApellidos(s) { s = String(s || "").trim(); if (!s) return { primer: "", segundo: "" }; const p = s.split(/\s+/); return { primer: p[0] || "", segundo: p.slice(1).join(" ") }; }
+function sexoAHoM(v) { const Uv = String(v || "").toUpperCase(); if (Uv.startsWith("MASC")) return "H"; if (Uv.startsWith("FEM")) return "M"; return ""; }
+function buildRoaPayloadFromRegistro(data) {
+  const ap = splitApellidos(data["APELLIDOS"]);
+  const domDisplay = (data["DOMICILIO_OPCION"] === "APORTA")
     ? ((document.getElementById('direccionDomicilio')?.value) || data["DOMICILIO"] || "")
-    : (data["DOMICILIO_OPCION"]||"");
-  const telDisplay=(data["TELÉFONO_OPCION"]==="OTRO")
-    ? (data["TELÉFONO"]||"")
-    : (data["TELÉFONO_OPCION"]||"");
-  const tipoDoc=data["TIPO DOCUMENTO_OPCION"]==="OTRO"
-    ? (data["TIPO DOCUMENTO"]||"")
-    : (data["TIPO DOCUMENTO_OPCION"]||"");
+    : (data["DOMICILIO_OPCION"] || "");
+  const telDisplay = (data["TELÉFONO_OPCION"] === "OTRO")
+    ? (data["TELÉFONO"] || "")
+    : (data["TELÉFONO_OPCION"] || "");
+  const tipoDoc = data["TIPO DOCUMENTO_OPCION"] === "OTRO"
+    ? (data["TIPO DOCUMENTO"] || "")
+    : (data["TIPO DOCUMENTO_OPCION"] || "");
 
   // --- Nacimiento: aplica la regla España / no España ---
   const paisNacEl = document.getElementById('paisNacimiento');
   const provNacEl = document.getElementById('provNacimiento');
-  const munNacEl  = document.getElementById('munNacimiento');
+  const munNacEl = document.getElementById('munNacimiento');
 
   const paisNac = (paisNacEl?.value || "").trim();
   const provNac = (provNacEl?.value || "").trim();
-  const munNac  = (munNacEl?.value  || "").trim();
+  const munNac = (munNacEl?.value || "").trim();
 
-  const stripAcc = s => String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+  const stripAcc = s => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const normPaisNac = stripAcc(paisNac).toUpperCase().trim();
   const isSpainNac = normPaisNac === "ESPANA" || normPaisNac === "ES" || normPaisNac === "ESPANA ";
 
   // Valores por defecto (compatibilidad)
-  let lugarNacOut   = data["LUGAR DE NACIMIENTO"] || "";
+  let lugarNacOut = data["LUGAR DE NACIMIENTO"] || "";
   let provinciaNacOut = "";
-  let paisOut       = data["NACIONALIDAD"] || "";
+  let paisOut = data["NACIONALIDAD"] || "";
 
   if (paisNac) {
     if (isSpainNac) {
       // Si país = España → lugar = municipio, provincia = provincia, país = España
-      lugarNacOut    = munNac || lugarNacOut;
+      lugarNacOut = munNac || lugarNacOut;
       provinciaNacOut = provNac || "";
-      paisOut        = paisNac || "ESPAÑA";
+      paisOut = paisNac || "ESPAÑA";
     } else {
       // Si NO es España → lugar = país, provincia vacía, país = país
-      lugarNacOut    = paisNac;
+      lugarNacOut = paisNac;
       provinciaNacOut = "";
-      paisOut        = paisNac;
+      paisOut = paisNac;
     }
   }
 
@@ -218,18 +218,18 @@ function buildRoaPayloadFromRegistro(data){
     "PROVINCIA": provinciaNacOut,
     "PAÍS": paisOut,
     "NACIONALIDAD": data["NACIONALIDAD"] || "",
-    "NOMBRE DE LOS PADRES": (data["NOMBRE_PADRES_OPCION"]==="OTRO"
-      ? (data["NOMBRE_PADRES"]||"")
-      : (data["NOMBRE_PADRES_OPCION"]||"")),
+    "NOMBRE DE LOS PADRES": (data["NOMBRE_PADRES_OPCION"] === "OTRO"
+      ? (data["NOMBRE_PADRES"] || "")
+      : (data["NOMBRE_PADRES_OPCION"] || "")),
     "PROFESIÓN": "",
     "TELÉFONO": telDisplay,
     "DOMICILIOS": domDisplay,
-    "ARMAS":"", "ALIAS":"", "CONSORTES":"", "EMPRESAS":"", "LUGARES DE ACTUACION":"", "LUGARES DE FRECUENCIA":"", "ORGANIZACION":"",
+    "ARMAS": "", "ALIAS": "", "CONSORTES": "", "EMPRESAS": "", "LUGARES DE ACTUACION": "", "LUGARES DE FRECUENCIA": "", "ORGANIZACION": "",
     "SEXO": sexoAHoM(data["SEXO_OPCION"]),
-    "TALLA":"", "COMPLEXION":"", "RAZA":"", "ACENTO":"", "CEJAS":"", "LABIOS":"", "MENTON":"", "CARA":"", "PELO":"", "OJOS":"", "NARIZ":"", "OREJAS":"", "MARCAS":"", "USAS":"", "VEHICULOS":"",
+    "TALLA": "", "COMPLEXION": "", "RAZA": "", "ACENTO": "", "CEJAS": "", "LABIOS": "", "MENTON": "", "CARA": "", "PELO": "", "OJOS": "", "NARIZ": "", "OREJAS": "", "MARCAS": "", "USAS": "", "VEHICULOS": "",
     "DILIGENCIAS": data["DILIGENCIAS"] || "",
     "FECHA DILIGENCIAS": data["FECHA_GENERACION"] || "",
-    "RESUMEN DILIGENCIAS": "", "FUNCIONARIO EMISOR":"", "FECHA DE CUMPLIMENTACION":""
+    "RESUMEN DILIGENCIAS": "", "FUNCIONARIO EMISOR": "", "FECHA DE CUMPLIMENTACION": ""
   };
 }
 
@@ -269,93 +269,93 @@ function validarRequeridos() {
 
 // Parchear exportarJSON para validar antes de descargar
 const _exportarJSON = window.exportarJSON;
-window.exportarJSON = async function(){
+window.exportarJSON = async function () {
   if (!validarRequeridos()) return;
   return _exportarJSON.apply(this, arguments);
 };
 
-async function exportarJSON(opts){
+async function exportarJSON(opts) {
   const msg = document.getElementById("message");
   msg.innerText = "Generando JSON...";
   opts = opts || {};
-    // ==== Validación País / Nacionalidad contra lista de países ====
-  (function(){
-    const natEl   = document.getElementById('nacionalidadInput');
-    const paisEl  = document.getElementById('paisNacimiento');
-    const nat     = (natEl?.value  || '').trim();
-    const paisN   = (paisEl?.value || '').trim();
+  // ==== Validación País / Nacionalidad contra lista de países ====
+  (function () {
+    const natEl = document.getElementById('nacionalidadInput');
+    const paisEl = document.getElementById('paisNacimiento');
+    const nat = (natEl?.value || '').trim();
+    const paisN = (paisEl?.value || '').trim();
 
     // Si ambos están vacíos, que actúen otras validaciones (required)
     if (!nat && !paisN) return;
 
     let raw = [];
-    try{
+    try {
       // Preferimos la lista plana que ya se usa para los datalist (PAISES_FULL en registro-nacimiento-domicilio.js)
-      if (Array.isArray(PAISES_FULL) && PAISES_FULL.length){
+      if (Array.isArray(PAISES_FULL) && PAISES_FULL.length) {
         raw = PAISES_FULL.slice();
       }
-    }catch(_e){
+    } catch (_e) {
       raw = [];
     }
     // Fallback por si en algún momento no existe PAISES_FULL pero sí PAISES/paises
-    if (!raw.length){
-      if (Array.isArray(window.PAISES) && window.PAISES.length){
+    if (!raw.length) {
+      if (Array.isArray(window.PAISES) && window.PAISES.length) {
         raw = window.PAISES.slice();
-      } else if (Array.isArray(window.paises) && window.paises.length){
+      } else if (Array.isArray(window.paises) && window.paises.length) {
         raw = window.paises.slice();
       }
     }
 
     // === VALIDACIÓN EXACTA contra LISTA DE PAISES (array) ===
-    if (raw.length){
-      const norm = s => String(s||"")
-        
+    if (raw.length) {
+      const norm = s => String(s || "")
+
         .toUpperCase()
         .trim();
       const listaNorm = raw.map(norm);
       const inval = v => v && !listaNorm.includes(norm(v));
 
-      if (inval(nat)){
+      if (inval(nat)) {
         alert("⚠️ La nacionalidad debe ser un país de la lista.");
         throw new Error("Nacionalidad fuera de lista");
       }
-      if (inval(paisN)){
+      if (inval(paisN)) {
         alert("⚠️ El país de nacimiento debe ser un país de la lista.");
         throw new Error("País de nacimiento fuera de lista");
       }
     }
 
     // === VALIDACIÓN EXACTA contra DATALIST igual que MUNICIPIO ===
-(function(){
-  // Nacionalidad
-  const natInp = document.getElementById('nacionalidadInput');
-  if (natInp && natInp.list && natInp.list.options.length){
-    const opcionesNat = Array.from(natInp.list.options).map(o => String(o.value||"").trim());
-    const valNat = String(natInp.value||"").trim();
-    if (valNat && !opcionesNat.includes(valNat)){
-      alert("⚠️ La nacionalidad debe coincidir EXACTAMENTE con un país de la lista. (MAYÚCULAS)");
-      throw new Error("Nacionalidad fuera de lista");
-    }
-  }
+    (function () {
+      // Nacionalidad
+      const natInp = document.getElementById('nacionalidadInput');
+      if (natInp && natInp.list && natInp.list.options.length) {
+        const opcionesNat = Array.from(natInp.list.options).map(o => String(o.value || "").trim());
+        const valNat = String(natInp.value || "").trim();
+        if (valNat && !opcionesNat.includes(valNat)) {
+          alert("⚠️ La nacionalidad debe coincidir EXACTAMENTE con un país de la lista. (MAYÚCULAS)");
+          throw new Error("Nacionalidad fuera de lista");
+        }
+      }
 
-  // País de nacimiento
-  const paisInp = document.getElementById('paisNacimiento');
-  if (paisInp && paisInp.list && paisInp.list.options.length){
-    const opcionesPais = Array.from(paisInp.list.options).map(o => String(o.value||"").trim());
-    const valPais = String(paisInp.value||"").trim();
-    if (valPais && !opcionesPais.includes(valPais)){
-      alert("⚠️ El país de nacimiento debe coincidir EXACTAMENTE con un país de la lista. (MAYÚCULAS)");
-      throw new Error("País de nacimiento fuera de lista");
-    }
-  }
-})();
+      // País de nacimiento
+      const paisInp = document.getElementById('paisNacimiento');
+      if (paisInp && paisInp.list && paisInp.list.options.length) {
+        const opcionesPais = Array.from(paisInp.list.options).map(o => String(o.value || "").trim());
+        const valPais = String(paisInp.value || "").trim();
+        if (valPais && !opcionesPais.includes(valPais)) {
+          alert("⚠️ El país de nacimiento debe coincidir EXACTAMENTE con un país de la lista. (MAYÚCULAS)");
+          throw new Error("País de nacimiento fuera de lista");
+        }
+      }
+    })();
   })();
 
   // === VALIDACIÓN: provincias y municipios nacimiento/domicilio contra listas ===
-  (function(){
-    const norm = s => String(s||"")
+  (function () {
+    const norm = s => String(s || "")
       .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g,"")
+      .replace(/[\u0300-\u036f]/g, "")
       .toUpperCase()
       .trim();
 
@@ -365,16 +365,16 @@ async function exportarJSON(opts){
       if (Array.isArray(window.PROVINCIAS_ES)) {
         provList = window.PROVINCIAS_ES.slice();
       }
-    } catch(_) {}
+    } catch (_) { }
     const provNormSet = new Set(provList.map(norm));
 
     const paisNEl = document.getElementById('paisNacimiento');
     const provNEl = document.getElementById('provNacimiento');
-    const munNEl  = document.getElementById('munNacimiento');
+    const munNEl = document.getElementById('munNacimiento');
 
     const paisN = (paisNEl?.value || "").trim();
     const provN = (provNEl?.value || "").trim();
-    const munN  = (munNEl?.value  || "").trim();
+    const munN = (munNEl?.value || "").trim();
 
     const isSpain = v => {
       const n = norm(v);
@@ -395,7 +395,7 @@ async function exportarJSON(opts){
 
       // Municipio nacimiento (si hay datalist asociado)
       if (munNEl && munNEl.list && munNEl.list.options && munN) {
-        const opciones = Array.from(munNEl.list.options).map(o => String(o.value||"").trim());
+        const opciones = Array.from(munNEl.list.options).map(o => String(o.value || "").trim());
         if (opciones.length && !opciones.includes(munN.trim())) {
           alert("⚠️ El municipio de nacimiento debe escogerse de la lista.");
           throw new Error("Municipio de nacimiento fuera de lista");
@@ -404,14 +404,14 @@ async function exportarJSON(opts){
     }
 
     // --- Domicilio: solo si el usuario APORTA domicilio ---
-    const domSel   = document.getElementById('domicilioOpcion');
-    const provDEl  = document.getElementById('provDomicilio');
-    const munDEl   = document.getElementById('munDomicilio');
-    const domOpt   = (domSel?.value || "").trim();
+    const domSel = document.getElementById('domicilioOpcion');
+    const provDEl = document.getElementById('provDomicilio');
+    const munDEl = document.getElementById('munDomicilio');
+    const domOpt = (domSel?.value || "").trim();
 
     if (domOpt === "APORTA") {
       const provD = (provDEl?.value || "").trim();
-      const munD  = (munDEl?.value  || "").trim();
+      const munD = (munDEl?.value || "").trim();
 
       if (provD) {
         if (provNormSet.size && !provNormSet.has(norm(provD))) {
@@ -421,7 +421,7 @@ async function exportarJSON(opts){
       }
 
       if (munDEl && munDEl.list && munDEl.list.options && munD) {
-        const opcionesD = Array.from(munDEl.list.options).map(o => String(o.value||"").trim());
+        const opcionesD = Array.from(munDEl.list.options).map(o => String(o.value || "").trim());
         if (opcionesD.length && !opcionesD.includes(munD.trim())) {
           alert("⚠️ El municipio de domicilio debe escogerse de la lista.");
           throw new Error("Municipio de domicilio fuera de lista");
@@ -431,70 +431,70 @@ async function exportarJSON(opts){
   })();
 
   // --- ESCUDO: Nombre de los Padres → si OTRO, no permitir vacío ---
-(function(){
-  const sel = document.getElementById('nombrePadresOpcion');
-  const txt = document.getElementById('nombrePadresTexto');
-  if (sel && txt && sel.value === "OTRO" && !txt.value.trim()){
-    alert("⚠️ Si seleccionas OTRO en Nombre de los Padres, debes especificarlo.");
-    txt.focus();
-    throw new Error("Nombre de los Padres vacío");
-  }
-})();
-
-// --- ESCUDO: Teléfono OTRO no puede ir vacío ---
-(function(){
-  const sel = document.getElementById('telefonoOpcion');
-  const txt = document.getElementById('telefonoTexto');
-  if (sel && txt && sel.value === "OTRO" && !txt.value.trim()){
-    alert("⚠️ Si seleccionas OTRO en teléfono, debes escribir un número.");
-    if (txt) txt.focus();
-    throw new Error("Teléfono OTRO vacío");
-  }
-})();
-
-    // === REQUISITO: LUGAR DEL HECHO y DETENCIÓN OBLIGATORIOS (municipio + vía del callejero) ===
-(function(){
-
-  // --- ESCUDO ANTI-FALLO CALLEJERO (parche seguro) ---
-  function __escudoCallejero(m, v){
-    try{
-      if (typeof window.esCalleValida === "function"){
-        return !!window.esCalleValida(m, v);
-      }
-      return false; // si falta la función, considerar NO válida
-    }catch(_){
-      return false; // si hay error interno, NO válida
+  (function () {
+    const sel = document.getElementById('nombrePadresOpcion');
+    const txt = document.getElementById('nombrePadresTexto');
+    if (sel && txt && sel.value === "OTRO" && !txt.value.trim()) {
+      alert("⚠️ Si seleccionas OTRO en Nombre de los Padres, debes especificarlo.");
+      txt.focus();
+      throw new Error("Nombre de los Padres vacío");
     }
-  }
+  })();
+
+  // --- ESCUDO: Teléfono OTRO no puede ir vacío ---
+  (function () {
+    const sel = document.getElementById('telefonoOpcion');
+    const txt = document.getElementById('telefonoTexto');
+    if (sel && txt && sel.value === "OTRO" && !txt.value.trim()) {
+      alert("⚠️ Si seleccionas OTRO en teléfono, debes escribir un número.");
+      if (txt) txt.focus();
+      throw new Error("Teléfono OTRO vacío");
+    }
+  })();
+
+  // === REQUISITO: LUGAR DEL HECHO y DETENCIÓN OBLIGATORIOS (municipio + vía del callejero) ===
+  (function () {
+
+    // --- ESCUDO ANTI-FALLO CALLEJERO (parche seguro) ---
+    function __escudoCallejero(m, v) {
+      try {
+        if (typeof window.esCalleValida === "function") {
+          return !!window.esCalleValida(m, v);
+        }
+        return false; // si falta la función, considerar NO válida
+      } catch (_) {
+        return false; // si hay error interno, NO válida
+      }
+    }
     const msg = document.getElementById('message');
     const selH = document.getElementById('munHechoSel');
     const viaH = document.getElementById('viaHecho');
     const selD = document.getElementById('munDetSel');
     const viaD = document.getElementById('viaDet');
-    const U = s => String(s||'').trim().toUpperCase();
-    const esVal = (m,v)=>{
-      try{ return (typeof window.esCalleValida === 'function') ? !!window.esCalleValida(m,v) : true; }catch(_){ return true; }
+    const U = s => String(s || '').trim().toUpperCase();
+    const esVal = (m, v) => {
+      try { return (typeof window.esCalleValida === 'function') ? !!window.esCalleValida(m, v) : true; } catch (_) { return true; }
     };
     // Hecho
     const mHRaw = selH && selH.value;
     const mH = U(mHRaw);
     const vH = viaH && viaH.value;
-    if (!mH){
-      if (msg) { msg.innerText='⚠️ Selecciona municipio del hecho ⚠️'; msg.style.color='#ff6f00'; }
+    if (!mH) {
+      if (msg) { msg.innerText = '⚠️ Selecciona municipio del hecho ⚠️'; msg.style.color = '#ff6f00'; }
       alert('⚠️ Selecciona municipio del hecho.');
       if (selH) selH.focus();
       throw new Error('Falta municipio del hecho');
     }
-    if (!vH){
-      if (msg) { msg.innerText='⚠️ Escribe la vía del hecho ⚠️'; msg.style.color='#ff6f00'; }
+    if (!vH) {
+      if (msg) { msg.innerText = '⚠️ Escribe la vía del hecho ⚠️'; msg.style.color = '#ff6f00'; }
       alert('⚠️ Escribe la vía del hecho.');
       if (viaH) viaH.focus();
       throw new Error('Falta vía del hecho');
     }
     // Si el municipio NO es OTRO (es decir, ADEJE / ARONA), se valida contra el callejero
-    if (mH !== 'OTRO' && !__escudoCallejero(mH, vH)){
-      if (msg) { msg.innerText='⚠️ La vía del hecho debe existir en el callejero de '+mH+' ⚠️'; msg.style.color='#ff6f00'; }
-      alert('⚠️ La vía del hecho debe existir en el callejero de '+mH+' ⚠️');
+    if (mH !== 'OTRO' && !__escudoCallejero(mH, vH)) {
+      if (msg) { msg.innerText = '⚠️ La vía del hecho debe existir en el callejero de ' + mH + ' ⚠️'; msg.style.color = '#ff6f00'; }
+      alert('⚠️ La vía del hecho debe existir en el callejero de ' + mH + ' ⚠️');
       if (viaH) viaH.focus();
       throw new Error('Vía del hecho no válida');
     }
@@ -503,35 +503,35 @@ async function exportarJSON(opts){
     const mDRaw = selD && selD.value;
     const mD = U(mDRaw);
     const vD = viaD && viaD.value;
-    if (!mD){
-      if (msg) { msg.innerText='⚠️ Selecciona municipio de la detención ⚠️'; msg.style.color='#ff6f00'; }
+    if (!mD) {
+      if (msg) { msg.innerText = '⚠️ Selecciona municipio de la detención ⚠️'; msg.style.color = '#ff6f00'; }
       alert('⚠️ Selecciona municipio de la detención ⚠️');
       if (selD) selD.focus();
       throw new Error('Falta municipio detención');
     }
-    if (!vD){
-      if (msg) { msg.innerText='⚠️ Escribe la vía de la detención ⚠️'; msg.style.color='#ff6f00'; }
+    if (!vD) {
+      if (msg) { msg.innerText = '⚠️ Escribe la vía de la detención ⚠️'; msg.style.color = '#ff6f00'; }
       alert('⚠️ Escribe la vía de la detención ⚠️');
       if (viaD) viaD.focus();
       throw new Error('Falta vía detención');
     }
     // Si el municipio NO es OTRO (es decir, ADEJE / ARONA), se valida contra el callejero
-    if (mD !== 'OTRO' && !__escudoCallejero(mD, vD)){
-      if (msg) { msg.innerText='⚠️ La vía de la detención debe existir en el callejero de '+mD+' ⚠️'; msg.style.color='#ff6f00'; }
-      alert('⚠️ La vía de la detención debe existir en el callejero de '+mD+' ⚠️');
+    if (mD !== 'OTRO' && !__escudoCallejero(mD, vD)) {
+      if (msg) { msg.innerText = '⚠️ La vía de la detención debe existir en el callejero de ' + mD + ' ⚠️'; msg.style.color = '#ff6f00'; }
+      alert('⚠️ La vía de la detención debe existir en el callejero de ' + mD + ' ⚠️');
       if (viaD) viaD.focus();
       throw new Error('Vía detención no válida');
     }
   })();
 
-  try{
+  try {
     const form = document.getElementById("registroForm");
     const fd = new FormData(form);
-    const data = {}; fd.forEach((v,k)=>data[k]=v);
+    const data = {}; fd.forEach((v, k) => data[k] = v);
 
     const UPP = s => String(s ?? '').toUpperCase();
-    function toESDate(s){
-      const t = String(s||'').trim();
+    function toESDate(s) {
+      const t = String(s || '').trim();
       let m = t.match(/^(\d{4})-(\d{2})-(\d{2})$/);
       if (m) return `${m[3]}/${m[2]}/${m[1]}`;
       m = t.match(/^(\d{2})[\/\-](\d{2})[\/\-](\d{4})$/);
@@ -541,8 +541,8 @@ async function exportarJSON(opts){
 
     // --- PATCH: asignación compacta de TIPO DOCUMENTO y NºDOCUMENTO ---
     const optTD = data["TIPO DOCUMENTO_OPCION"]; // valor select (INDOCUMENTADO / INDOCUMENTADA / DNI / ...)
-    const upOpt = String(optTD||"").toUpperCase();
-    if (upOpt === "INDOCUMENTADO" || upOpt === "INDOCUMENTADA"){
+    const upOpt = String(optTD || "").toUpperCase();
+    if (upOpt === "INDOCUMENTADO" || upOpt === "INDOCUMENTADA") {
       data["TIPO DOCUMENTO"] = (upOpt === "INDOCUMENTADA") ? "Indocumentada" : "Indocumentado";
       data["NºDOCUMENTO"] = ""; // siempre vacío si indocumentado/a
     } else if (upOpt === "OTRO") {
@@ -559,40 +559,40 @@ async function exportarJSON(opts){
     if (typeof delitosElegidos !== "undefined") {
       if (delitosElegidos.length === 1) delitoTexto = delitosElegidos[0];
       else if (delitosElegidos.length === 2) delitoTexto = delitosElegidos[0] + " y " + delitosElegidos[1];
-      else if (delitosElegidos.length > 2) delitoTexto = delitosElegidos.slice(0,-1).join(", ") + " y " + delitosElegidos[delitosElegidos.length-1];
+      else if (delitosElegidos.length > 2) delitoTexto = delitosElegidos.slice(0, -1).join(", ") + " y " + delitosElegidos[delitosElegidos.length - 1];
     }
 
-// --- MINI ESCUDO FINAL DELITOS ---
-(function(){
-  const cont = document.getElementById("delitosSeleccionados");
-  if (!cont) return;
+    // --- MINI ESCUDO FINAL DELITOS ---
+    (function () {
+      const cont = document.getElementById("delitosSeleccionados");
+      if (!cont) return;
 
-  const visibles = Array.from(cont.children)
-    .map(e => (e.textContent || "").trim())
-    .filter(Boolean);
+      const visibles = Array.from(cont.children)
+        .map(e => (e.textContent || "").trim())
+        .filter(Boolean);
 
-  // Si no hay delitos visibles → alerta + bloqueo
-  if (!visibles.length){
-    alert("⚠️ Debe seleccionar al menos un delito.");
-    throw new Error("Sin delitos visibles");
-  }
+      // Si no hay delitos visibles → alerta + bloqueo
+      if (!visibles.length) {
+        alert("⚠️ Debe seleccionar al menos un delito.");
+        throw new Error("Sin delitos visibles");
+      }
 
-  // Forzar que exporte EXACTAMENTE lo que se ve
-  if (visibles.length === 1) delitoTexto = visibles[0];
-  else if (visibles.length === 2) delitoTexto = visibles[0] + " y " + visibles[1];
-  else delitoTexto = visibles.slice(0,-1).join(", ") + " y " + visibles[visibles.length-1];
-})();
-    
+      // Forzar que exporte EXACTAMENTE lo que se ve
+      if (visibles.length === 1) delitoTexto = visibles[0];
+      else if (visibles.length === 2) delitoTexto = visibles[0] + " y " + visibles[1];
+      else delitoTexto = visibles.slice(0, -1).join(", ") + " y " + visibles[visibles.length - 1];
+    })();
+
     data["DELITO"] = delitoTexto;
 
     const abOpt = data["ABOGADO_OPCION"];
-    data["ABOGADO"] = (abOpt === "DE OFICIO") ? "de oficio." : (abOpt === "OTRO" ? (data["ABOGADO"]||"") : (data["ABOGADO"]||""));
+    data["ABOGADO"] = (abOpt === "DE OFICIO") ? "de oficio." : (abOpt === "OTRO" ? (data["ABOGADO"] || "") : (data["ABOGADO"] || ""));
 
     const ccOpt = data["COMUNICARSE CON_OPCION"];
-    data["COMUNICARSE CON:"] = (ccOpt === "NADIE") ? "nadie." : (ccOpt === "OTRO" ? (data["COMUNICARSE CON:"]||"") : (data["COMUNICARSE CON:"]||""));
+    data["COMUNICARSE CON:"] = (ccOpt === "NADIE") ? "nadie." : (ccOpt === "OTRO" ? (data["COMUNICARSE CON:"] || "") : (data["COMUNICARSE CON:"] || ""));
 
     const infOpt = data["INFORMAR DE DETENCION_OPCION"];
-    data["INFORMAR DE DETENCION"] = (infOpt === "NADIE") ? "nadie." : (infOpt === "OTRO" ? (data["INFORMAR DE DETENCION"]||"") : (data["INFORMAR DE DETENCION"]||""));
+    data["INFORMAR DE DETENCION"] = (infOpt === "NADIE") ? "nadie." : (infOpt === "OTRO" ? (data["INFORMAR DE DETENCION"] || "") : (data["INFORMAR DE DETENCION"] || ""));
 
     const intOpt = data["INTERPRETE_OPCION"] || "NO";
     let interpreteDisplay = "NO";
@@ -601,62 +601,62 @@ async function exportarJSON(opts){
     data["IDIOMA"] = interpreteDisplay;
     data["INTERPRETE"] = interpreteDisplay;
 
-    const nomDisplay = (data["NOMBRE_PADRES_OPCION"]==="OTRO") ? (data["NOMBRE_PADRES"]||"") : (data["NOMBRE_PADRES_OPCION"]||"");
-    const domDisplay = (data["DOMICILIO_OPCION"]==="APORTA") ? ((document.getElementById('direccionDomicilio')?.value) || data["DOMICILIO"] || "") : (data["DOMICILIO_OPCION"]||"");
-    const telDisplay = (data["TELÉFONO_OPCION"]==="OTRO") ? (data["TELÉFONO"]||"") : (data["TELÉFONO_OPCION"]||"");
+    const nomDisplay = (data["NOMBRE_PADRES_OPCION"] === "OTRO") ? (data["NOMBRE_PADRES"] || "") : (data["NOMBRE_PADRES_OPCION"] || "");
+    const domDisplay = (data["DOMICILIO_OPCION"] === "APORTA") ? ((document.getElementById('direccionDomicilio')?.value) || data["DOMICILIO"] || "") : (data["DOMICILIO_OPCION"] || "");
+    const telDisplay = (data["TELÉFONO_OPCION"] === "OTRO") ? (data["TELÉFONO"] || "") : (data["TELÉFONO_OPCION"] || "");
 
     data["NOMBRE_PADRES"] = nomDisplay;
     data["Nombre de los Padres"] = nomDisplay;
     data["DOMICILIO"] = domDisplay;
     data["TELÉFONO"] = telDisplay;
 
-    data["MEDICO"] = (data["MEDICO"]==="SI") ? "SI" : "NO";
-    data["CONSULADO"] = (data["CONSULADO"]==="SI") ? "SI" : "NO";
+    data["MEDICO"] = (data["MEDICO"] === "SI") ? "SI" : "NO";
+    data["CONSULADO"] = (data["CONSULADO"] === "SI") ? "SI" : "NO";
 
     const hoy = new Date();
-    const dd = String(hoy.getDate()).padStart(2,'0');
-    const mm = String(hoy.getMonth()+1).padStart(2,'0');
+    const dd = String(hoy.getDate()).padStart(2, '0');
+    const mm = String(hoy.getMonth() + 1).padStart(2, '0');
     const yyyy = String(hoy.getFullYear());
     const fechaStr = `${dd}-${mm}-${yyyy}`;
 
     // Garantiza que existan claves de municipio ya capitalizadas en data
     if (!data["municipio-hecho"] && document.getElementById('munHechoSel')) {
-      (function(){
+      (function () {
         const sel = document.getElementById('munHechoSel');
         const otro = document.getElementById('munHechoOtro');
-        const vSel = (sel?.value||'').trim().toUpperCase();
-        const val = vSel==='OTRO' ? (otro?.value||'') : vSel;
-        const up = String(val||'').trim().toUpperCase();
-        data["municipio-hecho"] = up==='ADEJE' ? 'Adeje' : (up==='ARONA' ? 'Arona' : (String(val||'').trim().toLowerCase().replace(/\b([A-Za-zÀ-ÖØ-öø-ÿ])/g, m=>m.toUpperCase())));
+        const vSel = (sel?.value || '').trim().toUpperCase();
+        const val = vSel === 'OTRO' ? (otro?.value || '') : vSel;
+        const up = String(val || '').trim().toUpperCase();
+        data["municipio-hecho"] = up === 'ADEJE' ? 'Adeje' : (up === 'ARONA' ? 'Arona' : (String(val || '').trim().toLowerCase().replace(/\b([A-Za-zÀ-ÖØ-öø-ÿ])/g, m => m.toUpperCase())));
       })();
     }
     if (!data["municipio-detencion"] && document.getElementById('munDetSel')) {
-      (function(){
+      (function () {
         const sel = document.getElementById('munDetSel');
         const otro = document.getElementById('munDetOtro');
-        const vSel = (sel?.value||'').trim().toUpperCase();
-        const val = vSel==='OTRO' ? (otro?.value||'') : vSel;
-        const up = String(val||'').trim().toUpperCase();
-        data["municipio-detencion"] = up==='ADEJE' ? 'Adeje' : (up==='ARONA' ? 'Arona' : (String(val||'').trim().toLowerCase().replace(/\b([A-Za-zÀ-ÖØ-öø-ÿ])/g, m=>m.toUpperCase())));
+        const vSel = (sel?.value || '').trim().toUpperCase();
+        const val = vSel === 'OTRO' ? (otro?.value || '') : vSel;
+        const up = String(val || '').trim().toUpperCase();
+        data["municipio-detencion"] = up === 'ADEJE' ? 'Adeje' : (up === 'ARONA' ? 'Arona' : (String(val || '').trim().toLowerCase().replace(/\b([A-Za-zÀ-ÖØ-öø-ÿ])/g, m => m.toUpperCase())));
       })();
     }
 
     // === VIA/MUNI/RESTO → construir Lugar completo y campos dedicados ===
-    function titleCase(s){
-      s = String(s||'').trim();
+    function titleCase(s) {
+      s = String(s || '').trim();
       if (!s) return '';
       return s.toLowerCase().replace(/\b([a-záéíóúüñ])/gi, m => m.toUpperCase());
     }
-    function getTipoVia(via){
-      const t = String(via||'').trim();
+    function getTipoVia(via) {
+      const t = String(via || '').trim();
       if (!t) return '';
       const m = t.match(/^([A-ZÁÉÍÓÚÜÑ]+|[A-Za-zÁÉÍÓÚÜÑ]+)\b/);
       if (!m) return '';
       // Normaliza tipo: "AVENIDA" → "Avenida"
       return titleCase(m[1]);
     }
-    function normalizarViaConTipo(via){
-      const v = String(via||'').trim();
+    function normalizarViaConTipo(via) {
+      const v = String(via || '').trim();
       if (!v) return '';
       const tipo = getTipoVia(v);
       if (!tipo) return v;
@@ -664,37 +664,37 @@ async function exportarJSON(opts){
       return v.replace(/^([A-ZÁÉÍÓÚÜÑ]+|[A-Za-zÁÉÍÓÚÜÑ]+)\b/, tipo);
     }
     // === Helper: separa VÍA en { tipo, nombre } ===
-    function splitViaTipoNombre(via){
-      const v = String(via||'').trim();
-      if (!v) return { tipo:'', nombre:'' };
+    function splitViaTipoNombre(via) {
+      const v = String(via || '').trim();
+      if (!v) return { tipo: '', nombre: '' };
       const tipo = getTipoVia(v);
-      if (!tipo) return { tipo:'', nombre:v };
-      const nombre = v.replace(/^([A-ZÁÉÍÓÚÜÑ]+|[A-Za-zÁÉÍÓÚÜÑ]+)\b\s*/,'').trim();
+      if (!tipo) return { tipo: '', nombre: v };
+      const nombre = v.replace(/^([A-ZÁÉÍÓÚÜÑ]+|[A-Za-zÁÉÍÓÚÜÑ]+)\b\s*/, '').trim();
       return { tipo, nombre };
     }
-    function buildLugar(via, resto, muni){
+    function buildLugar(via, resto, muni) {
       const v = normalizarViaConTipo(via);
-      const r = String(resto||'').trim();
-      const m = String(muni||'').trim();
+      const r = String(resto || '').trim();
+      const m = String(muni || '').trim();
       const dir = v ? (r ? (v + ' ' + r) : v) : (r || '');
       return m ? (dir ? `${dir}, ${m}` : m) : dir;
     }
-    function getMuniFromUI(selId, otroId){
+    function getMuniFromUI(selId, otroId) {
       const sel = document.getElementById(selId);
       const otro = document.getElementById(otroId);
       if (!sel) return '';
-      const val = String(sel.value||'').trim();
-      if (val.toUpperCase() === 'OTRO') return String(otro?.value||'').trim();
+      const val = String(sel.value || '').trim();
+      if (val.toUpperCase() === 'OTRO') return String(otro?.value || '').trim();
       return val;
     }
 
     // --- HECHO (leer SIEMPRE de los campos visibles, NO del hidden) ---
-    const _viaHVal   = document.getElementById('viaHecho')?.value || '';
+    const _viaHVal = document.getElementById('viaHecho')?.value || '';
     const _restoHVal = document.getElementById('restoHecho')?.value || '';
-    const _muniHVal  = getMuniFromUI('munHechoSel','munHechoOtro');
-    const _tipoViaH  = getTipoVia(_viaHVal);
+    const _muniHVal = getMuniFromUI('munHechoSel', 'munHechoOtro');
+    const _tipoViaH = getTipoVia(_viaHVal);
     // Derivados para JSON: via-* (con tipo) y viasin-* (sin tipo), sin forzar minúsculas
-    const _viaHechoLower = (function(){
+    const _viaHechoLower = (function () {
       const p = splitViaTipoNombre(_viaHVal);
       return (p.tipo ? (p.tipo + ' ' + p.nombre) : p.nombre);
     })();
@@ -702,28 +702,28 @@ async function exportarJSON(opts){
     const _lugarHechoFull = buildLugar(_viaHVal, _restoHVal, _muniHVal);
 
     // --- DETENCIÓN (leer SIEMPRE de los campos visibles, NO del hidden) ---
-    const _viaDVal   = document.getElementById('viaDet')?.value || '';
+    const _viaDVal = document.getElementById('viaDet')?.value || '';
     const _restoDVal = document.getElementById('restoDet')?.value || '';
-    const _muniDVal  = getMuniFromUI('munDetSel','munDetOtro');
-    const _tipoViaD  = getTipoVia(_viaDVal);
-    const _viaDetLower = (function(){
+    const _muniDVal = getMuniFromUI('munDetSel', 'munDetOtro');
+    const _tipoViaD = getTipoVia(_viaDVal);
+    const _viaDetLower = (function () {
       const p = splitViaTipoNombre(_viaDVal);
       return (p.tipo ? (p.tipo + ' ' + p.nombre) : p.nombre);
     })();
-    const _viasinDetLower   = splitViaTipoNombre(_viaDVal).nombre;
+    const _viasinDetLower = splitViaTipoNombre(_viaDVal).nombre;
     const _lugarDetFull = buildLugar(_viaDVal, _restoDVal, _muniDVal);
 
     // ===== CAMPOS GRANULARES NACIMIENTO / DOMICILIO (para COMPAPOL) =====
     const __paisNacVal = (document.getElementById('paisNacimiento')?.value || '').trim();
     const __provNacVal = (document.getElementById('provNacimiento')?.value || '').trim();
-    const __munNacVal  = (document.getElementById('munNacimiento')?.value  || '').trim();
+    const __munNacVal = (document.getElementById('munNacimiento')?.value || '').trim();
 
     const __provDomVal = (document.getElementById('provDomicilio')?.value || '').trim();
-    const __munDomVal  = (document.getElementById('munDomicilio')?.value  || '').trim();
-    const __dirDomVal  = (document.getElementById('direccionDomicilio')?.value || '').trim();
+    const __munDomVal = (document.getElementById('munDomicilio')?.value || '').trim();
+    const __dirDomVal = (document.getElementById('direccionDomicilio')?.value || '').trim();
 
 
-    
+
     const jsonOut = {
       "Nombre": data["Nombre"],
       "Apellidos": UPP(data["APELLIDOS"]),
@@ -782,22 +782,45 @@ async function exportarJSON(opts){
       "Condición": "Detenido"
     };
 
-    const jsonText = JSON.stringify(jsonOut, null, 2);
+    const fileName = `${sanitizeForFilename(data["Nombre"] || "")} ${sanitizeForFilename(data["APELLIDOS"] || "")} ${fechaStr}.json`.trim() || "resumen.json";
 
-    // --- MUNICIPIO (hecho/detención) en JSON
+    let finalContent = JSON.stringify(jsonOut, null, 2);
 
-    const fileName = `${sanitizeForFilename(data["Nombre"]||"")} ${sanitizeForFilename(data["APELLIDOS"]||"")} ${fechaStr}.json`.trim() || "resumen.json";
+    // --- ENCRIPTACIÓN AUTOMÁTICA (Password: Fecha de Nacimiento DDMMYYYY) ---
+    try {
+      let pass = "adejegtd"; // Fallback/Default
+      const dobInput = document.querySelector('input[name="FECHA DE NACIMIENTO"]');
+      if (dobInput && dobInput.value) {
+        // dobInput.value suele ser YYYY-MM-DD para <input type="date">
+        const parts = dobInput.value.split('-');
+        if (parts.length === 3) {
+          pass = parts[2] + parts[1] + parts[0]; // DDMMYYYY
+        }
+      }
 
-    if (!opts.noSave) await saveBlobJson(jsonText, fileName);
-    if (opts.returnText) return { jsonOut, jsonText, fileName };
+      const encrypted = CryptoJS.AES.encrypt(finalContent, pass).toString();
+      const wrapper = {
+        "meta_encrypted": true,
+        "data": encrypted,
+        "timestamp": new Date().toISOString()
+      };
+      finalContent = JSON.stringify(wrapper, null, 2);
+    } catch (e) {
+      console.error("Error auto-encriptando", e);
+      alert("Error encriptando: " + e);
+      return;
+    }
+
+    if (!opts.noSave) await saveBlobJson(finalContent, fileName);
+    if (opts.returnText) return { jsonOut, jsonText: finalContent, fileName };
     msg.innerText = "✅ JSON generado y descargado ✅";
-    try{
+    try {
       const payload = buildRoaPayloadFromRegistro(data);
       sessionStorage.setItem('ROA_PAYLOAD', JSON.stringify(payload));
       /*const goBtn = document.getElementById('goRoaBtn');
       if(goBtn){ goBtn.style.display='inline-block'; goBtn.onclick = ()=>{ location.href = RUTA_ROA; }; }*/
-    }catch(_e){}
-  } catch(err){
+    } catch (_e) { }
+  } catch (err) {
     console.error(err);
     msg.innerText = "❌ " + (err?.message || err);
   }
@@ -805,40 +828,75 @@ async function exportarJSON(opts){
 
 // PATCH compacto: importarJSON + rehidratación completa (mismo comportamiento, menos código)
 (function () {
-  const U = s => String(s||'').trim();
-  const H = v => { const m = U(v).match(/^(\d{1,2})[:hH\.](\d{2})/); return m ? `${m[1].padStart(2,'0')}:${m[2]}` : ""; };
-  const D = s => { s = U(s); if(!s) return ''; let m = s.match(/^([0-3]?\d)[\/\-]([0-1]?\d)[\/\-](\d{4})$/); if(m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`; m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/); if(m) return s; m = s.match(/^(\d{4})[\/](\d{1,2})[\/](\d{1,2})$/); if(m) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`; return ''; };
-  const PL = s => { s=U(s); if(!s) return {via:'',muni:''}; const p=s.lastIndexOf(','); return p<0?{via:s,muni:''}:{via:s.slice(0,p).trim(), muni:s.slice(p+1).trim()}; };
-  const SSI = (n,v)=>{ try{ setSelectWithInput(n,v); }catch(_){} };
-  const SB = (n,v)=>{ const el=document.querySelector(`[name="${n}"]`); if(el){ el.value=v??''; el.dispatchEvent(new Event('change')); } };
-  const ESV = (sel,val)=>{
-    if(!sel){return}
-    const s=U(val); if(!s){ sel.value=''; sel.dispatchEvent(new Event('change')); return; }
-    let o=[...sel.options].find(x=>x.value===s)||[...sel.options].find(x=>x.value.toUpperCase()===s.toUpperCase());
-    if(!o){ o=document.createElement('option'); o.value=s; o.textContent=s; sel.appendChild(o); }
-    sel.value=o.value; sel.dispatchEvent(new Event('change'));
+  const U = s => String(s || '').trim();
+  const H = v => { const m = U(v).match(/^(\d{1,2})[:hH\.](\d{2})/); return m ? `${m[1].padStart(2, '0')}:${m[2]}` : ""; };
+  const D = s => { s = U(s); if (!s) return ''; let m = s.match(/^([0-3]?\d)[\/\-]([0-1]?\d)[\/\-](\d{4})$/); if (m) return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`; m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/); if (m) return s; m = s.match(/^(\d{4})[\/](\d{1,2})[\/](\d{1,2})$/); if (m) return `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}`; return ''; };
+  const PL = s => { s = U(s); if (!s) return { via: '', muni: '' }; const p = s.lastIndexOf(','); return p < 0 ? { via: s, muni: '' } : { via: s.slice(0, p).trim(), muni: s.slice(p + 1).trim() }; };
+  const SSI = (n, v) => { try { setSelectWithInput(n, v); } catch (_) { } };
+  const SB = (n, v) => { const el = document.querySelector(`[name="${n}"]`); if (el) { el.value = v ?? ''; el.dispatchEvent(new Event('change')); } };
+  const ESV = (sel, val) => {
+    if (!sel) { return }
+    const s = U(val); if (!s) { sel.value = ''; sel.dispatchEvent(new Event('change')); return; }
+    let o = [...sel.options].find(x => x.value === s) || [...sel.options].find(x => x.value.toUpperCase() === s.toUpperCase());
+    if (!o) { o = document.createElement('option'); o.value = s; o.textContent = s; sel.appendChild(o); }
+    sel.value = o.value; sel.dispatchEvent(new Event('change'));
   };
-  window.importarJSON = function(){
+  window.importarJSON = function () {
     const input = document.getElementById("fileInputJSON");
     input.value = null; input.click();
-    input.onchange = async (e)=>{
-      const f = e.target.files && e.target.files[0]; if(!f) return;
-      try{
-        const obj = JSON.parse(await f.text());
-        const M = new Map(Object.entries(obj).map(([k,v])=>[String(k).trim().toUpperCase(), v]));
+    input.onchange = async (e) => {
+      const f = e.target.files && e.target.files[0]; if (!f) return;
+      try {
+        const textContent = await f.text();
+        let obj;
+        try {
+          obj = JSON.parse(textContent);
+        } catch (e) {
+          throw new Error("El archivo no es un JSON válido.");
+        }
+
+        // --- DETECCIÓN DE ENCRIPTACIÓN ---
+        if (obj && obj["meta_encrypted"] === true && obj["data"]) {
+          let pass = "adejegtd"; // Intento automático
+          let decryptedData = "";
+          let success = false;
+
+          // 1. Intentar con password por defecto
+          try {
+            const bytes = CryptoJS.AES.decrypt(obj["data"], pass);
+            decryptedData = bytes.toString(CryptoJS.enc.Utf8);
+            if (decryptedData) success = true;
+          } catch (e) { }
+
+          // 2. Si falla, pedir contraseña (la fecha de nacimiento o "adejegtd")
+          if (!success) {
+            pass = prompt("Archivo protegido. Introduce la contraseña (ej: DDMMYYYY):", "");
+            if (!pass) throw new Error("Se requiere contraseña.");
+            try {
+              const bytes = CryptoJS.AES.decrypt(obj["data"], pass);
+              decryptedData = bytes.toString(CryptoJS.enc.Utf8);
+              if (!decryptedData) throw new Error("Incorrecta.");
+            } catch (e) {
+              throw new Error("Contraseña incorrecta o fallo al desencriptar.");
+            }
+          }
+
+          obj = JSON.parse(decryptedData);
+        }
+        const M = new Map(Object.entries(obj).map(([k, v]) => [String(k).trim().toUpperCase(), v]));
         const G = k => M.get(String(k).toUpperCase()) ?? "";
 
         // Delitos
-        (function(){
+        (function () {
           let raw = G("Delito");
           if (!raw && ("Delito" in obj)) raw = obj["Delito"];
           if (!raw) raw = obj["DELITOS"] || obj["Delitos"] || obj["delitos"];
           let lista = [];
-          if (Array.isArray(raw)) lista = raw.map(v => String(v||'').trim()).filter(Boolean);
-          else if (typeof raw === 'string') lista = raw ? raw.split(/\s*,\s*|\s+y\s+/i).map(v=>v.trim()).filter(Boolean) : [];
+          if (Array.isArray(raw)) lista = raw.map(v => String(v || '').trim()).filter(Boolean);
+          else if (typeof raw === 'string') lista = raw ? raw.split(/\s*,\s*|\s+y\s+/i).map(v => v.trim()).filter(Boolean) : [];
           if (typeof delitosElegidos === 'undefined') { window.delitosElegidos = []; }
-          try { delitosElegidos.splice(0, delitosElegidos.length, ...lista); } catch(_) { window.delitosElegidos = lista.slice(); }
-          try { if (typeof renderDelitos === 'function') renderDelitos(); } catch(_) {}
+          try { delitosElegidos.splice(0, delitosElegidos.length, ...lista); } catch (_) { window.delitosElegidos = lista.slice(); }
+          try { if (typeof renderDelitos === 'function') renderDelitos(); } catch (_) { }
         })();
 
         // Campos simples
@@ -873,95 +931,95 @@ async function exportarJSON(opts){
         SSI("CONSULADO", G("Consulado"));
 
         // Nº documento (respeta INDOCUMENTADO/A)
-        (function(){
+        (function () {
           const t = document.querySelector('[name="TIPO DOCUMENTO_OPCION"]');
-          SB("NºDOCUMENTO", (t && String(t.value).toUpperCase()==="INDOCUMENTADO/A") ? "" : (G("Nº Documento")||""));
+          SB("NºDOCUMENTO", (t && String(t.value).toUpperCase() === "INDOCUMENTADO/A") ? "" : (G("Nº Documento") || ""));
         })();
 
         // Nacimiento / Domicilio extendidos
-        (function(){
-          const gv=(...ks)=>{ for(const k of ks){ if(k in obj && U(obj[k])) return U(obj[k]); const up=k.toUpperCase(),lo=k.toLowerCase(); if(up in obj && U(obj[up])) return U(obj[up]); if(lo in obj && U(obj[lo])) return U(obj[lo]); } return ''; };
-          const pais = gv('pais-nacimiento','PAÍS-NACIMIENTO','PAIS-NACIMIENTO','PAÍS DE NACIMIENTO','PAIS','País');
+        (function () {
+          const gv = (...ks) => { for (const k of ks) { if (k in obj && U(obj[k])) return U(obj[k]); const up = k.toUpperCase(), lo = k.toLowerCase(); if (up in obj && U(obj[up])) return U(obj[up]); if (lo in obj && U(obj[lo])) return U(obj[lo]); } return ''; };
+          const pais = gv('pais-nacimiento', 'PAÍS-NACIMIENTO', 'PAIS-NACIMIENTO', 'PAÍS DE NACIMIENTO', 'PAIS', 'País');
           const prov = gv('provincia-nacimiento');
-          const mun  = gv('municipio-nacimiento');
-          const paisInp=document.getElementById('paisNacimiento'), provSel=document.getElementById('provNacimiento'), munInp=document.getElementById('munNacimiento');
-          if(paisInp && pais){ paisInp.value=pais; paisInp.dispatchEvent(new Event('input')); paisInp.dispatchEvent(new Event('change')); }
-          if(provSel && prov){ ESV(provSel,prov); }
-          if(munInp && mun){ munInp.value=mun; munInp.dispatchEvent(new Event('input')); munInp.dispatchEvent(new Event('change')); }
-          try{ if(typeof recomputeLugarNacimiento==='function') recomputeLugarNacimiento(); }catch(_){}
+          const mun = gv('municipio-nacimiento');
+          const paisInp = document.getElementById('paisNacimiento'), provSel = document.getElementById('provNacimiento'), munInp = document.getElementById('munNacimiento');
+          if (paisInp && pais) { paisInp.value = pais; paisInp.dispatchEvent(new Event('input')); paisInp.dispatchEvent(new Event('change')); }
+          if (provSel && prov) { ESV(provSel, prov); }
+          if (munInp && mun) { munInp.value = mun; munInp.dispatchEvent(new Event('input')); munInp.dispatchEvent(new Event('change')); }
+          try { if (typeof recomputeLugarNacimiento === 'function') recomputeLugarNacimiento(); } catch (_) { }
 
-          const domSel=document.getElementById('domicilioOpcion'), provD=document.getElementById('provDomicilio'), munD=document.getElementById('munDomicilio'), dirD=document.getElementById('direccionDomicilio');
-          const pD=gv('provincia-domicilio'), mD=gv('municipio-domicilio'), dD=gv('direccion-domicilio','Domicilio','DOMICILIO');
-          if((pD||mD||dD) && domSel && domSel.value!=='APORTA'){ domSel.value='APORTA'; domSel.dispatchEvent(new Event('change')); }
-          if(provD && pD){ ESV(provD,pD); }
-          if(munD && mD){ munD.value=mD; munD.dispatchEvent(new Event('input')); munD.dispatchEvent(new Event('change')); }
-          if(dirD && dD){ dirD.value=dD; dirD.dispatchEvent(new Event('input')); }
+          const domSel = document.getElementById('domicilioOpcion'), provD = document.getElementById('provDomicilio'), munD = document.getElementById('munDomicilio'), dirD = document.getElementById('direccionDomicilio');
+          const pD = gv('provincia-domicilio'), mD = gv('municipio-domicilio'), dD = gv('direccion-domicilio', 'Domicilio', 'DOMICILIO');
+          if ((pD || mD || dD) && domSel && domSel.value !== 'APORTA') { domSel.value = 'APORTA'; domSel.dispatchEvent(new Event('change')); }
+          if (provD && pD) { ESV(provD, pD); }
+          if (munD && mD) { munD.value = mD; munD.dispatchEvent(new Event('input')); munD.dispatchEvent(new Event('change')); }
+          if (dirD && dD) { dirD.value = dD; dirD.dispatchEvent(new Event('input')); }
         })();
 
         // --- Rehidratación: LUGAR DEL HECHO y LUGAR DE LA DETENCIÓN (municipio + vía + resto) ---
-        (function(){
-          const Tt = s => String(s||'').trim();
+        (function () {
+          const Tt = s => String(s || '').trim();
           const Up = s => Tt(s).toUpperCase();
-          const splitLugar = (s)=>{
-            s = Tt(s); if(!s) return {dir:'', muni:''};
+          const splitLugar = (s) => {
+            s = Tt(s); if (!s) return { dir: '', muni: '' };
             const p = s.lastIndexOf(',');
-            return (p<0) ? {dir:s, muni:''} : {dir:Tt(s.slice(0,p)), muni:Tt(s.slice(p+1))};
+            return (p < 0) ? { dir: s, muni: '' } : { dir: Tt(s.slice(0, p)), muni: Tt(s.slice(p + 1)) };
           };
-          function setMunicipio(selId, otroId, muniVal){
+          function setMunicipio(selId, otroId, muniVal) {
             const sel = document.getElementById(selId);
             const otro = document.getElementById(otroId);
-            if(!sel) return;
+            if (!sel) return;
             const MU = Up(muniVal);
-            if (MU === 'ADEJE' || MU === 'ARONA'){
+            if (MU === 'ADEJE' || MU === 'ARONA') {
               sel.value = MU;
-              if (otro){ otro.style.display = 'none'; otro.value = ''; }
-            } else if (MU){
+              if (otro) { otro.style.display = 'none'; otro.value = ''; }
+            } else if (MU) {
               sel.value = 'OTRO';
-              if (otro){ otro.style.display = 'block'; otro.value = muniVal; }
+              if (otro) { otro.style.display = 'block'; otro.value = muniVal; }
             } else {
               sel.value = '';
-              if (otro){ otro.style.display = 'none'; otro.value = ''; }
+              if (otro) { otro.style.display = 'none'; otro.value = ''; }
             }
             // No disparamos eventos aquí
           }
-          function setViaResto(viaId, restoId, viaVal, restoVal){
+          function setViaResto(viaId, restoId, viaVal, restoVal) {
             const viaEl = document.getElementById(viaId);
             const resEl = document.getElementById(restoId);
-            if(viaEl){
+            if (viaEl) {
               viaEl.style.display = 'block';
               viaEl.value = Tt(viaVal);
             }
-            if(resEl){
+            if (resEl) {
               resEl.style.display = 'block';
               resEl.value = Tt(restoVal);
             }
           }
           // HECHO
-          (function(){
-            const L   = obj["Lugar del hecho"] || obj["LUGAR DEL HECHO"] || "";
+          (function () {
+            const L = obj["Lugar del hecho"] || obj["LUGAR DEL HECHO"] || "";
             const via = obj["via-hecho"] || "";
             const res = obj["restodireccion-hecho"] || "";
             const mun = obj["municipio-hecho"] || "";
             const fromL = splitLugar(L);
-            setMunicipio('munHechoSel','munHechoOtro', mun || fromL.muni);
-            setViaResto('viaHecho','restoHecho', via || fromL.dir, res);
+            setMunicipio('munHechoSel', 'munHechoOtro', mun || fromL.muni);
+            setViaResto('viaHecho', 'restoHecho', via || fromL.dir, res);
           })();
           // DETENCIÓN
-          (function(){
-            const L   = obj["Lugar de la detención"] || obj["LUGAR DE LA DETENCIÓN"] || obj["LUGAR DE LA DETENCION"] || "";
+          (function () {
+            const L = obj["Lugar de la detención"] || obj["LUGAR DE LA DETENCIÓN"] || obj["LUGAR DE LA DETENCION"] || "";
             const via = obj["via-detencion"] || "";
             const res = obj["restodireccion-detencion"] || "";
             const mun = obj["municipio-detencion"] || "";
             const fromL = splitLugar(L);
-            setMunicipio('munDetSel','munDetOtro', mun || fromL.muni);
-            setViaResto('viaDet','restoDet', via || fromL.dir, res);
+            setMunicipio('munDetSel', 'munDetOtro', mun || fromL.muni);
+            setViaResto('viaDet', 'restoDet', via || fromL.dir, res);
           })();
         })();
 
-        const msg=document.getElementById("message"); if(msg) msg.innerText="✅ JSON importado y formulario rellenado ✅";
-      }catch(err){
+        const msg = document.getElementById("message"); if (msg) msg.innerText = "✅ JSON importado y formulario rellenado ✅";
+      } catch (err) {
         console.error(err);
-        const msg=document.getElementById("message"); if(msg) msg.innerText="❌ Error al importar JSON: "+(err?.message||err);
+        const msg = document.getElementById("message"); if (msg) msg.innerText = "❌ Error al importar JSON: " + (err?.message || err);
       }
     };
   };
