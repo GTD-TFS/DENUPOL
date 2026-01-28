@@ -1023,4 +1023,50 @@ async function exportarJSON(opts) {
       }
     };
   };
+
+  // --- INTEGRACIÓN CON DENUPOL (FIREBASE) ---
+  function showToast(msg) {
+    const p = document.getElementById("message");
+    if (p) {
+      p.innerText = "⭐ " + msg + " ⭐";
+      setTimeout(() => { if (p.innerText.includes(msg)) p.innerText = ""; }, 5000);
+    } else {
+      alert(msg);
+    }
+  }
+
+  async function persistEncryptedToDenupol(encJsonText, filename) {
+    const fb = window.DENU_FB;
+    if (!fb) throw new Error("Firebase no disponible (falta window.DENU_FB)");
+    const user = fb.auth.currentUser;
+    if (!user || !user.uid) throw new Error("No autenticado en Firebase. Inicia sesión primero.");
+    const name = (String(filename || "registro").trim() || "registro").replace(/\.json$/i, "") + ".json";
+    await fb.addDoc(fb.collection(fb.db, "registros"), {
+      ownerUid: user.uid,
+      filename: name,
+      encJson: String(encJsonText || ""),
+      createdAt: fb.serverTimestamp()
+    });
+    showToast("Guardado en DenuPol");
+  }
+
+  async function onSaveEncryptedJsonToDenupol() {
+    const r = await exportarJSON({ noSave: true, returnText: true });
+    if (r && r.jsonText) {
+      await persistEncryptedToDenupol(r.jsonText, r.fileName);
+    }
+  }
+
+  // Cableado del botón
+  document.addEventListener("DOMContentLoaded", () => {
+    const btnSave = document.getElementById("btnSaveEncJson");
+    if (btnSave) {
+      btnSave.addEventListener("click", () => {
+        onSaveEncryptedJsonToDenupol().catch(e => {
+          console.error(e);
+          alert("Error guardando en DenuPol: " + (e?.message || e));
+        });
+      });
+    }
+  });
 })();
