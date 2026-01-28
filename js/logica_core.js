@@ -1025,14 +1025,46 @@ async function exportarJSON(opts) {
   };
 
   // --- INTEGRACIÓN CON DENUPOL (FIREBASE) ---
-  function showToast(msg) {
-    const p = document.getElementById("message");
-    if (p) {
-      p.innerText = "⭐ " + msg + " ⭐";
-      setTimeout(() => { if (p.innerText.includes(msg)) p.innerText = ""; }, 5000);
-    } else {
-      alert(msg);
-    }
+  function showToast(text) {
+    const prev = document.getElementById('denuToast');
+    if (prev) prev.remove();
+
+    const t = document.createElement('div');
+    t.id = 'denuToast';
+    t.textContent = text;
+    t.style.cssText = `
+      position:fixed;
+      left:50%;
+      top:50%;
+      transform:translate(-50%,-40%);
+      background:rgba(15,25,40,.92);
+      color:#fff;
+      padding:14px 24px;
+      border-radius:18px;
+      font-weight:800;
+      letter-spacing:.5px;
+      z-index:999999;
+      box-shadow:0 15px 40px rgba(0,0,0,.6);
+      border:1px solid rgba(255,255,255,.18);
+      opacity:0;
+      text-transform:uppercase;
+      backdrop-filter:blur(8px);
+      -webkit-backdrop-filter:blur(8px);
+      transition:opacity .2s ease, transform .2s ease;
+      pointer-events:none;
+    `;
+    document.body.appendChild(t);
+
+    // Forzar reflow para animación
+    t.offsetHeight;
+    t.style.opacity = '1';
+    t.style.transform = 'translate(-50%,-50%)';
+
+    setTimeout(() => {
+      t.style.opacity = '0';
+      t.style.transform = 'translate(-50%,-60%)';
+      setTimeout(() => t.remove(), 200);
+    }, 3500);
   }
 
   async function persistEncryptedToDenupol(encJsonText, filename) {
