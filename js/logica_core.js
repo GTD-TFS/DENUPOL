@@ -1051,22 +1051,40 @@ async function exportarJSON(opts) {
   }
 
   async function onSaveEncryptedJsonToDenupol() {
-    const r = await exportarJSON({ noSave: true, returnText: true });
-    if (r && r.jsonText) {
-      await persistEncryptedToDenupol(r.jsonText, r.fileName);
+    showToast("Generando datos...");
+    // Usamos window.exportarJSON para asegurar que pase por la validación del wrapper
+    const r = await window.exportarJSON({ noSave: true, returnText: true });
+    if (!r || !r.jsonText) {
+      // Si no hay r, es porque validarRequeridos() falló (y ya mostró alert) o hubo un error.
+      return;
     }
+    showToast("Enviando a DenuPol...");
+    await persistEncryptedToDenupol(r.jsonText, r.fileName);
   }
 
-  // Cableado del botón
-  document.addEventListener("DOMContentLoaded", () => {
+  // Cableado del botón (más robusto: intentar ahora y también en DOMContentLoaded)
+  function wireSaveButton() {
     const btnSave = document.getElementById("btnSaveEncJson");
     if (btnSave) {
-      btnSave.addEventListener("click", () => {
+      // Evitar duplicados eliminando listener previo (si lo hubiera en el mismo objeto)
+      btnSave.onclick = null;
+      // Usamos event listener limpio
+      const newHandler = () => {
         onSaveEncryptedJsonToDenupol().catch(e => {
           console.error(e);
           alert("Error guardando en DenuPol: " + (e?.message || e));
         });
-      });
+      };
+      // Reemplazamos el botón para asegurar que no hay otros listeners colgando del clon anterior
+      const cloned = btnSave.cloneNode(true);
+      btnSave.parentNode.replaceChild(cloned, btnSave);
+      cloned.addEventListener("click", newHandler);
     }
-  });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", wireSaveButton);
+  } else {
+    wireSaveButton();
+  }
 })();
