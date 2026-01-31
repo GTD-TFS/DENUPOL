@@ -11,6 +11,7 @@
 <script src="./countries.js"></script>
 <script src="./provincias_es.js"></script>
 <script src="./municipios.js"></script>
+<script src="./js/crypto-js.min.js"></script>
 <title>Complainant · GLOBAL</title>
 <style>
   :root{
@@ -313,7 +314,7 @@
     margin:0 auto;
   }
 
-   /* ===== SOLO GLOBAL: pantalla inicial de categoría (ligeramente mayor) ===== */
+  /* ===== SOLO GLOBAL: pantalla inicial de categoría (ligeramente mayor) ===== */
   .step[data-key="caracteristica_hecho"] .choices.pills{
     gap:18px;
     max-width:680px;
@@ -408,7 +409,7 @@
   <label>Nationality</label>
   <div class="picker">
     <div class="pickerTop">
-      <input id="fNac" placeholder="Search country..." />
+      <input id="fNac" placeholder="United Kingdom, Italia, Germany..." />
     </div>
     <div class="pillList" id="nacPills"></div>
   </div>
@@ -950,8 +951,26 @@ function buildPayload(){
   return {
     meta: { tipo_delictivo: currentTipoFinal(), token, version: 2, createdAt: new Date().toISOString() },
     filiacion: readFiliacion(),
-  hechos: exportForChatGPT(buildHechosAskedOnly())
+    hechos: exportForChatGPT(buildHechosAskedOnly())
   };
+}
+
+function buildLabelPublicoFromFiliacion(f){
+  const nombre = ((f && f["Nombre"]) ? String(f["Nombre"]) : "").trim();
+  const ap = ((f && f["Apellidos"]) ? String(f["Apellidos"]) : "").trim();
+  const ap1 = (ap.split(/\s+/).filter(Boolean)[0] || "");
+  if (nombre && ap1) return `${nombre} ${ap1[0].toUpperCase()}.`;
+  return (nombre || ap1 || "(Sin nombre)");
+}
+
+// *** IMPORTANTE: fija y solo para COMPA-POL (mismo que en global_esp.html)
+const __FILIACION_PASS = "adejegtd";
+
+function encryptFiliacionForCompapol(f){
+  if (!window.CryptoJS || !CryptoJS.AES) throw new Error("Falta CryptoJS (AES). No se puede cifrar.");
+  const plain = JSON.stringify(f || {});
+  const data = CryptoJS.AES.encrypt(plain, __FILIACION_PASS).toString();
+  return { meta_encrypted: true, data };
 }
 function exportForChatGPT(state, map = EXPORT_KEY_MAP){
   const has = (o,k)=> Object.prototype.hasOwnProperty.call(o,k);
@@ -1505,6 +1524,10 @@ async function saveFinal(){
     if (!token){ alert(trUI("Falta token en la URL.")); return; }
 
     const p = buildPayload();
+    const label_publico = buildLabelPublicoFromFiliacion(p.filiacion);
+    const filiacion_enc = encryptFiliacionForCompapol(p.filiacion);
+    const sexo_publico = (p.filiacion && p.filiacion["Sexo"]) ? String(p.filiacion["Sexo"]).trim() : "";
+    const docText = `${label_publico} ${sexo_publico} | (${new Date().toLocaleString()})`;
 
     try{
       const outLocal = { estado:"FINALIZADA", ...p };
@@ -1517,7 +1540,10 @@ async function saveFinal(){
       estado: "FINALIZADA",
       tipo: currentTipoFinal(),
       token,
-      filiacion: p.filiacion,
+      label_publico,
+      sexo_publico,
+      doc: docText,
+      filiacion_enc,
       hechos: p.hechos,
       createdAt: serverTimestamp(),
       finalizedAt: serverTimestamp()

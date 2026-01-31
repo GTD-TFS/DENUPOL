@@ -10,6 +10,7 @@
 <script src="./paises.js"></script>
 <script src="./provincias_es.js"></script>
 <script src="./municipios.js"></script>
+<script src="./js/crypto-js.min.js"></script>
 <title>Denunciante · GLOBAL</title>
 <style>
   :root{
@@ -543,7 +544,31 @@ const EXPORT_KEY_MAP = QUESTION_SETS["EXPORT_KEY_MAP"] || {};
 const $ = (id)=>document.getElementById(id);
 const qs = new URLSearchParams(location.search);
 const token = (qs.get("token")||"").trim();
+
 const tipo = (qs.get("tipo")||"PATRIMONIO").trim().toUpperCase();
+
+// === UI: overrides de etiqueta (solo visual; NO cambia valores internos) ===
+const UI_ES_OVERRIDES = {
+  "SUSTRACCIÓN": "ROBO / HURTO"
+};
+
+// --- COMPAPOL: filiación cifrada (password fijo) ---
+const __FILIACION_PASS = "adejegtd";
+
+function buildLabelPublicoFromFiliacion(f){
+  const nombre = ((f && f["Nombre"]) ? String(f["Nombre"]) : "").trim();
+  const ap = ((f && f["Apellidos"]) ? String(f["Apellidos"]) : "").trim();
+  const ap1 = (ap.split(/\s+/).filter(Boolean)[0] || "");
+  if (nombre && ap1) return `${nombre} ${ap1[0].toUpperCase()}.`;
+  return (nombre || ap1 || "(Sin nombre)");
+}
+
+function encryptFiliacionForCompapol(f){
+  if (!window.CryptoJS || !CryptoJS.AES) throw new Error("Falta CryptoJS (AES). No se puede cifrar.");
+  const plain = JSON.stringify(f || {});
+  const data = CryptoJS.AES.encrypt(plain, __FILIACION_PASS).toString();
+  return { meta_encrypted: true, data };
+}
 
 function applyTipoDocVisibility(){
   const sel = $("fTipoDoc");
@@ -1026,7 +1051,8 @@ function makeStepEl(q){
       const b = document.createElement("button");
       b.type = "button";
       b.className = "choiceBtn";
-      b.textContent = opt;
+      const uiLabel = (UI_ES_OVERRIDES && UI_ES_OVERRIDES[opt]) ? UI_ES_OVERRIDES[opt] : opt;
+      b.textContent = uiLabel;
       b.dataset.value = opt;
       b.classList.toggle("isPicked", opt === wiz.st[q.key]);
       b.addEventListener("click", ()=>{
@@ -1510,12 +1536,27 @@ async function saveFinal(){
 
     const ref = doc(db, "predenuncias", token);
 
+    // Enviamos a Firebase: filiación CIFRADA + doc en claro (editable en Denupol)
+    const label_publico = buildLabelPublicoFromFiliacion(p.filiacion);
+    const sexo_publico = ((p.filiacion && p.filiacion["Sexo"]) ? String(p.filiacion["Sexo"]) : "").trim();
+    const filiacion_enc = encryptFiliacionForCompapol(p.filiacion);
+
+    // "doc" abierto: mínimo viable = resumen (o vacío). Denupol lo editará.
+    const docText = (p.hechos && (p.hechos.resumen || p.hechos.Resumen)) ? String(p.hechos.resumen || p.hechos.Resumen) : "";
+
     await setDoc(ref, {
       estado: "FINALIZADA",
       tipo: currentTipoFinal(),
       token,
-      filiacion: p.filiacion,
+
+      // --- lo que Denupol necesita sin ver filiación en claro ---
+      filiacion_enc,
+      label_publico,
+      sexo_publico,
+
+      // --- resto ---
       hechos: p.hechos,
+      doc: docText,
       createdAt: serverTimestamp(),
       finalizedAt: serverTimestamp()
     }, { merge: true });
