@@ -1,6 +1,6 @@
 // sw.js — PWA ACTUALIZABLE (NO SE QUEDA ANTIGUA EN iOS)
 
-const CACHE = "predenuncias-v23";
+const CACHE = "predenuncias-v24";
 
 const ASSETS = [
   "./",
