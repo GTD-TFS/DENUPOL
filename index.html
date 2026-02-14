@@ -619,6 +619,25 @@
     body.inboxMode #btnPersist {
       display: none !important;
     }
+    /* ===== DENUNCIAS EN DOS COLUMNAS SOLO PC ===== */
+@media (min-width: 900px) {
+
+  .denRow {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 18px;
+    align-items: start;
+  }
+
+  .denRight {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    position: sticky;
+    top: 12px;
+  }
+
+}
   </style>
 </head>
 
@@ -666,8 +685,14 @@
 
           </div>
           <div style="height:10px"></div>
-          <div id="denList" class="list"></div>
-          <div class="status" id="denStatus"></div>
+          <div class="denRow">
+
+  <div class="denLeft">
+    <div id="denList" class="list"></div>
+    <div class="status" id="denStatus"></div>
+  </div>
+
+  <div class="denRight">
 
           <div style="height:14px"></div>
           <div style="height:1px;background:var(--edge)"></div>
@@ -706,7 +731,8 @@
               </div>
             </div>
           </div>
-
+  </div>
+</div>
           <textarea id="area"></textarea>
 
           <div class="foot">
