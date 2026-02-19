@@ -760,6 +760,12 @@
       <div class="row" style="margin-top:12px">
         <button class="btn pill gray" data-crime="GLOBAL" type="button">GLOBAL 🇪🇸</button>
         <button class="btn pill gray" data-crime="GLOBAL INGLES" type="button">GLOBAL 🇬🇧</button>
+        <button class="btn pill gray" data-crime="GLOBAL ALEMAN" type="button">GLOBAL 🇩🇪</button>
+        <button class="btn pill gray" data-crime="GLOBAL ITALIANO" type="button">GLOBAL 🇮🇹</button>
+        <button class="btn pill gray" data-crime="GLOBAL RUSO" type="button">GLOBAL 🇷🇺</button>
+        <button class="btn pill gray" data-crime="GLOBAL FRANCES" type="button">GLOBAL 🇫🇷</button>
+        <button class="btn pill gray" data-crime="GLOBAL CHINO" type="button">GLOBAL 🇨🇳</button>
+        <button class="btn pill gray" data-crime="GLOBAL JAPONES" type="button">GLOBAL 🇯🇵</button>
   <button class="btn pill gray" data-crime="HURTO_RVI" type="button" disabled hidden>
   HURTO Y RVI
 </button>
@@ -905,6 +911,12 @@
         "DAÑOS": ["denunciante_danos.html", "danos.html", "denunciante.html"],
         "GLOBAL": ["global_esp.html", "denunciante.html"],
         "GLOBAL INGLES": ["global_en_ui.html", "denunciante.html"],
+        "GLOBAL ALEMAN": ["global_de_ui.html", "denunciante.html"],
+        "GLOBAL ITALIANO": ["global_it_ui.html", "denunciante.html"],
+        "GLOBAL RUSO": ["global_ru_ui.html", "denunciante.html"],
+        "GLOBAL FRANCES": ["global_fr_ui.html", "denunciante.html"],
+        "GLOBAL CHINO": ["global_zh_ui.html", "denunciante.html"],
+        "GLOBAL JAPONES": ["global_ja_ui.html", "denunciante.html"],
       };
       const base = new URL("./", location.href).href;
       const list = C[tipo] || ["global_esp.html", "denunciante.html"];
@@ -1698,6 +1710,8 @@
     $("btnCloseCrime").addEventListener("click", closeCrimeModal);
     $("crimeBack").addEventListener("click", (e) => { if (e.target === $("crimeBack")) closeCrimeModal(); });
 
+    const TOKEN_TTL_MINUTES = 60;
+
     async function generateTokenFor(tipo) {
       tipo = (tipo || "").trim().toUpperCase();
       if (!tipo) return;
@@ -1714,7 +1728,7 @@
           crimeType: tipo,
           revoked: false,
           createdAt: serverTimestamp(),
-          expiresAt: Timestamp.fromMillis(Date.now() + 5 * 60 * 1000)
+          expiresAt: Timestamp.fromMillis(Date.now() + TOKEN_TTL_MINUTES * 60 * 1000)
         }, { merge: false });
       } catch (e) {
         console.warn("No se pudo crear tokenSessions/" + token, e);
